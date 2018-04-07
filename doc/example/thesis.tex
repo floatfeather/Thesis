@@ -28,7 +28,7 @@
 
 % 设定文档的基本信息。
 \pkuthssinfo{
-	cthesisname = {博士研究生学位论文}, ethesisname = {Doctor Thesis},
+	cthesisname = {硕士研究生学位论文}, ethesisname = {Doctor Thesis},
 	ctitle = {测试文档}, etitle = {Test Document},
 	cauthor = {某某},
 	eauthor = {Test},
@@ -46,20 +46,23 @@
 % 普通用户可删除此段，并相应地删除 chap/*.tex 中的
 % “\pkuthssffaq % 中文测试文字。”一行。
 \usepackage{color}
-\def\pkuthssffaq{%
-	\emph{\textcolor{red}{pkuthss 文档模版最常见问题：}}
+% \def\pkuthssffaq{%
+% 	\emph{\textcolor{red}{pkuthss 文档模版最常见问题：}}
 
-	\texttt{\string\cite}、\texttt{\string\parencite} %
-	和 \texttt{\string\supercite} 三个命令分别产生%
-	未格式化的、带方括号的和上标且带方括号的引用标记：%
-	\cite{test-en}，\parencite{test-zh}、\supercite{test-en, test-zh}。
+% 	\texttt{\string\cite}、\texttt{\string\parencite} %
+% 	和 \texttt{\string\supercite} 三个命令分别产生%
+% 	未格式化的、带方括号的和上标且带方括号的引用标记：%
+% 	\cite{test-en}，\parencite{test-zh}、\supercite{test-en, test-zh}。
 
-	若要避免章末空白页，请在调用 pkuthss 文档类时加入 \texttt{openany} 选项。
+% 	若要避免章末空白页，请在调用 pkuthss 文档类时加入 \texttt{openany} 选项。
 
-	如果编译时不出参考文献，
-	请参考 \texttt{texdoc pkuthss}“问题及其解决”一章
-	“上游宏包可能引起的问题”一节中关于 biber 的说明。
-}
+% 	如果编译时不出参考文献，
+% 	请参考 \texttt{texdoc pkuthss}“问题及其解决”一章
+% 	“上游宏包可能引起的问题”一节中关于 biber 的说明。
+% }
+
+\newcommand\todo[1]{\textcolor{red}{\{TODO:#1\}}}
+\usepackage{hyperref}
 
 \begin{document}
 	% 以下为正文之前的部分，默认不进行章节编号。
@@ -88,7 +91,7 @@
 	% 序言。
 	\include{chap/introduction}
 	% 各章节。
-	\include{chap/chap1}
+	\include{chap/background}
 	% 结论。
 	\include{chap/conclusion}
 
@@ -97,6 +100,9 @@
 	% 排版参考文献列表。bibintoc 选项使“参考文献”出现在目录中；
 	% 如果同时要使参考文献列表参与章节编号，可将“bibintoc”改为“bibnumbered”。
 	\printbibliography[heading = bibintoc]
+	% \bibliographystyle{IEEEtran}%
+
+	% \bibliography{thesis.bib}
 	% 各附录。
 	\include{chap/encl1}
 
