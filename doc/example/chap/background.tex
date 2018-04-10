@@ -1,120 +1,22 @@
 \chapter{研究背景}
 
-\section{缺陷定位技术}
+\section{缺陷定位例子}
 
-随着软件的发展，生活中越来越多的方面都与软件有着紧密的关系。
-小到人们的日常出行、购物、餐饮等，大到航空航天、医药等领域，软件在人们的生活中扮演着重要的角色。
-随着软件的应用领域的扩大，软件的复杂性上升，提升了软件缺陷的可能性。
-软件缺陷可能会导致巨大的损失。
-一个著名的被广泛引用的例子，是在海湾战争时，一颗导弹由于导航软件的精度缺陷而偏离了目标，导致28人死亡和100人受伤\todo{cite}。
-美国国家标准与技术研究院(NIST)2002年发表的一篇报告(\todo{cite})显示，软件缺陷每年会导致约595亿美元的经济损失。\todo{每年这么多国内公司漏洞事件}
-发现并修复软件缺陷，保障软件的高质量成为一项重要的任务。
+\section{使用基于频谱的缺陷定位}
 
-在发现软件缺陷之后，开发人员为了解决这个缺陷往往需要三步\parencite{Parnin2011Are}。
-第一步，缺陷定位，需要找到程序中和这个缺陷有关的语句。
-第二步，理解缺陷，明白为什么会发生缺陷。
-第三步，修复缺陷，修改代码以让缺陷消失。
-这三个步骤合起来就是调试的过程。缺陷定位作为调试的第一步，其完成速度和准确性对后面的步骤有着很大的影响。
-在传统的开发环境当中，人们可以手动调试来定位缺陷，比如插入断点、打印日志信息等等。
-在1989年Collofello等人就指出尝试去减少软件中的错误会花费50\%到80\%的开发和维护的精力\parencite{Collofello1989Evaluating}。
-随着软件的复杂性的上升，手动地定位软件缺陷将会耗费更多开发者的时间和精力。
-为了提高定位缺陷的速度，研究人员对自动化的缺陷定位展开了研究，并取得了巨大的进展\todo{cite}。
-然而在2011年，Partin和Osro的一篇调查\parencite{Parnin2011Are}通过研究缺陷定位技术在实际应用场景下的效果，发现以往的评价指标并不能准确的反映缺陷定位技术在实际应用中的效果。
-以往的缺陷定位技术是基于一系列关于开发人员会如何调试的假设，而这些假设在实际场景的某些情况下会失效。
-自动化缺陷定位技术还有很大的发展空间。
+\section{使用基于状态覆盖的缺陷定位}
 
-\subsection{自动缺陷定位技术概述}
-
-Weiser在1981年提出的程序切片\parencite{Weiser1981Program,Weiser1984Program}是自动调试（特别是缺陷定位）最早的技术之——。
-给定一个程序$P$和一个在$P$的语句$s$中使用的变量$v$，程序切片会找到$P$中所有可能会影响$s$中$v$的值的语句。
-如果$s$中$v$的值是错误的，那么导致这个错误的错误语句一定在这个切片当中。
-也就是说，不在这个切片当中语句可以在调试过程中被忽略。
-尽管程序切片已经减少了可能出错的语句的数量，但是切片中的语句的数量仍然比较大。
-为了解决这个问题，Korel和Laski在1988年提出了动态程序切片\parencite{Korel1988Dynamic}。
-动态程序切片计算某一个特定执行的切片。
-后来又有很多的动态程序切片的变种被提出\parencite{Demillo1996Critical,Gyim1999An,Zhang2006Pruning,Zhang2003Precise}，用于解决调试问题，并且产生了大量研究工作\parencite{Agrawal1993Debugging,Liu2007Indexing,Al2005The,Alves2011Fault,Ju2014HSFal,Wotawa2010Fault,Mao2014Slice}。
-
-为了解决程序切片调试方法的短板，一种通过观察错误程序的执行特征和正确程序的执行特征的调试技术被提出。
-这些技术通过收集程序执行信息，观察不同的某种特征，来定位缺陷。
-比如使用路径概要\parencite{Reps1997The}，反例\parencite{Ball2003From,Groce2004Understanding}，语句覆盖\parencite{Jones2002Visualization}和谓词值\parencite{Liblit2005Scalable,Liu2005SOBER}等等。
-
-本文根据北京大学熊英飞研究员对缺陷定位的分类\parencite{YingfeiFL}，将缺陷定位分为以下几类。
-
-\begin{itemize}
-\item 基于切片的缺陷定位
-\item 基于频谱的缺陷定位
-\item 基于状态覆盖的缺陷定位
-\item 基于变异的缺陷定位
-\item 基于构造正确执行状态的缺陷定位
-\item 基于算法式调试的缺陷定位
-\item 基于差异化调试的缺陷定位
-\end{itemize}
-
-本文的研究内容主要根据基于频谱的缺陷定位和基于状态覆盖的缺陷定位。
-
-\subsection{基于频谱的缺陷定位}
-
-基于频谱的缺陷定位是使用最广泛的自动化缺陷定位方法\parencite{YingfeiFL}。
-程序频谱(Program Spectrum)最早由Reps等人于1997年提出\parencite{Reps1997The}，用于解决千年虫问题。
-Harrold等人在2002年\parencite{Harrold2000An}提出使用测试覆盖信息作为频谱信息的调试方法。
-Renieris等人在2003年提出使用成功的测试用例和失败的测试用例进行缺陷定位\parencite{Renieres2003Fault}，奠定了此后基于频谱的缺陷定位的基础。
-
-考虑一种极端的情况。
-比如当某一个语句$s$被执行的之后，测试用例就会失败。
-而成功的测试用例都不会执行语句$s$。
-那么语句$s$很有可能就是导致缺陷的语句。
-找出所有这样的语句$s$就可以大幅减少需要排查错误的语句。
-但是，在实际的代码中这种极端的情况很少出现。
-对于一个出错的语句$s$，它很可能既被失败的测试用例执行，也被成功的测试用例执行。
-因为一个语句在其不同的上下文作用下会产生不同的效果。
-简单地计算成功的测试用例覆盖的语句和失败的测试用例覆盖的语句的差集是无法准确找出错误语句的。
-利用成功的测试用例覆盖的语句的交集和并集，与失败的测试用例覆盖的语句取差集，是最早的一种基于频谱的缺陷定位方法\parencite{Renieres2003Fault}。
-这种方法也隐含着基于频谱的缺陷定位的假设：被失败的测试用例执行的语句，更有可能有错误。而被成功的测试用例执行的语句，更有可能是正确的。
-
-为方便此后的表述，引入一些数学符号，见表\ref{spec_symbol}。表中的统计量就是程序频谱。
-\begin{table}
-\centering
-\begin{tabular}{|c|c|}
-\hline
-$a_{ef}$ & 一个语句被失败的测试用例覆盖的次数 \\
-\hline
-$a_{nf}$ & 一个语句未被失败的测试用例覆盖的次数 \\
-\hline
-$a_{ep}$ & 一个语句被成功的测试用例覆盖的次数 \\
-\hline
-$a_{np}$ & 一个语句未被成功的测试用例覆盖的次数 \\
-\hline
-$a_{f}$ & 失败的测试用例的个数 \\
-\hline
-$a_{p}$ & 成功的测试用例执行的次数 \\
-\hline
-\end{tabular}
-\caption{基于频谱的错误定位的数学符号及其意义}
-\label{spec_symbol}
-\end{table}
-
-Jones等人提出的Tarantula\parencite{Jones2002Visualization}，直观地展示给开发者展示了每个语句在成功的测试用例和失败的测试用例下的参与情况。
-每条语句的参与情况，使用公式
-$$
-\mathrm{Tarantula}(s) = \frac{\frac{a_{ep}}{a_{p}}}{\frac{a_{ep}}{a_{p}} + \frac{a_{ef}}{a_{f}}}
-$$
-计算。
-这个公式计算的值也被称为怀疑度。
-怀疑度更高的语句会在怀疑列表更靠前的位置。
-相比于交集并集差集的方法，Tarantula在Siemens数据集上可以将错误的语句放在怀疑列表更前面的位置\parencite{Jones2005Empirical}。
-
-Tarantula之后，又有很多计算怀疑度的公式被提出。
-Ochiai由Abreu等人提出\parencite{Abreu2006An}。
-$$
-\mathrm{Ochiai}(s) = \frac{a_{ef}}{\sqrt{a_{f} \times (a_{ef} + a_{ep})}}
-$$
-Ochiai由\parencite{Meyer2004Comparison}提出用于计算基因的相似度。
-Abreu等人将其引入用于计算怀疑度，并与Jaccard\parencite{Chen2002Pinpoint}，Tarantula，AMPLE\parencite{Dallmeier2005Lightweight}比较，发现Ochiai计算的怀疑度使得定位效果更好\parencite{Abreu2006An,Abreu2007On}。
-
-谢晓园等人在理论上证明了不存在单一最佳公式\parencite{yoo2014no}。
-
-\subsection{基于状态覆盖的缺陷定位}
-
-
-
-
+比如，对于如下代码C代码，
+\lstset{language=C}
+\begin{lstlisting}
+a = abs(a);
+if (update_b) {
+    b = sqrt(a);
+}
+\end{lstlisting}
+当\mycode{a}和\mycode{b}的类型都为\mycode{int}时，如果\mycode{a}的值为最小的\mycode{int}时（\mycode{a = -2147483648}），
+则代码会在第3行出错（\mycode{b}的值为\mycode{NAN}）。
+这是因为当\mycode{a = -2147483648}时，第1行的\mycode{a}会被赋值为一个负数，于是在第3行进行\mycode{sqrt}操作的时候，就被出错。
+在第1行的时候，考虑两个抽象的状态\mycode{a $\ge$ 0}和\mycode{a $<$ 0}。
+发现通过的测试只有\mycode{a $\ge$ 0}这个状态，而失败的测试只有\mycode{a $<$ 0}这个状态。
+所以可以认为\mycode{a $<$ 0}是缺陷状态，引入这个状态的第1行的语句很可能就是缺陷语句。

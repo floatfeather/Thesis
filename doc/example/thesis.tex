@@ -62,7 +62,19 @@
 % }
 
 \newcommand\todo[1]{\textcolor{red}{\{TODO:#1\}}}
+\newcommand\mycode[1]{{\small\ttfamily #1}}
 \usepackage{hyperref}
+
+\usepackage{listings}
+\lstset{
+    numbers=left, 
+    numberstyle=\tiny,
+    keywordstyle= \color{ blue!70},
+    commentstyle= \color{red!50!green!50!blue!50}, 
+    frame=shadowbox, % 阴影效果
+    rulesepcolor= \color{ red!20!green!20!blue!20},
+    basicstyle=\small\ttfamily
+} 
 
 \begin{document}
 	% 以下为正文之前的部分，默认不进行章节编号。
@@ -91,6 +103,7 @@
 	% 序言。
 	\include{chap/introduction}
 	% 各章节。
+	\include{chap/related}
 	\include{chap/background}
 	% 结论。
 	\include{chap/conclusion}
