@@ -98,24 +98,53 @@ $a_{p}$ & 通过的测试用例执行的次数 \\
 \end{table}
 
 Jones等人提出的Tarantula\parencite{Jones2002Visualization}，直观地展示给开发者展示了每个语句在通过的测试用例和失败的测试用例下的参与情况。
-每条语句的参与情况，使用公式
-$$
-\mathrm{Tarantula}(s) = \frac{\frac{a_{ep}}{a_{p}}}{\frac{a_{ep}}{a_{p}} + \frac{a_{ef}}{a_{f}}}
-$$
-计算。
-这个公式计算的值也被称为怀疑度。
+参与情况也被称为怀疑度。
+% 每条语句的参与情况，使用公式
+% $$
+% \mathrm{Tarantula}(s) = \frac{\frac{a_{ep}}{a_{p}}}{\frac{a_{ep}}{a_{p}} + \frac{a_{ef}}{a_{f}}}
+% $$
+% 计算。
+% 这个公式计算的值也被称为怀疑度。
 怀疑度更高的语句会在怀疑列表更靠前的位置。
 相比于交集并集差集的方法，Tarantula在Siemens数据集上可以将错误的语句放在怀疑列表更前面的位置\parencite{Jones2005Empirical}。
 
 Tarantula之后，又有很多计算怀疑度的公式被提出。
-Ochiai由Abreu等人提出\parencite{Abreu2006An}。
-$$
-\mathrm{Ochiai}(s) = \frac{a_{ef}}{\sqrt{a_{f} \times (a_{ef} + a_{ep})}}
-$$
+效果比较好的Ochiai由Abreu等人提出\parencite{Abreu2006An}。
+% $$
+% \mathrm{Ochiai}(s) = \frac{a_{ef}}{\sqrt{a_{f} \times (a_{ef} + a_{ep})}}
+% $$
 Ochiai由\parencite{Meyer2004Comparison}提出用于计算基因的相似度。
 Abreu等人将其引入用于计算怀疑度，并与Jaccard\parencite{Chen2002Pinpoint}，Tarantula，AMPLE\parencite{Dallmeier2005Lightweight}比较，发现Ochiai计算的怀疑度使得定位效果更好\parencite{Abreu2006An,Abreu2007On}。
 
-Yoo等人在理论上证明了不存在单一最佳公式\parencite{yoo2014no}。
+表\ref{susp_formula}中列出了部分经典的怀疑度公式。
+这些公式都遵循被失败的测试用例执行的语句，更有可能有错误。而被通过的测试用例执行的语句，更有可能是正确的。
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+公式名称 & 公式 \\
+\hline
+Ochiai\parencite{Abreu2006An} & $\mathrm{Susp}(s) = \frac{a_{ef}}{\sqrt{a_{f} \times (a_{ef} + a_{ep})}}$ \\
+\hline
+Tarantula\parencite{Jones2002Visualization} &
+$\mathrm{Susp}(s) = \frac{\frac{a_{ep}}{a_{p}}}{\frac{a_{ep}}{a_{p}} + \frac{a_{ef}}{a_{f}}}$ \\
+\hline
+Barinel\parencite{Abreu2009Spectrum} &
+$\mathrm{Susp}(s) = 1 - \frac{a_{ep}}{a_{ep} + a_{ef}}$ \\
+\hline
+DStar\parencite{Wong2014The} &
+$\mathrm{Susp}(s) = \frac{2}{a_{ep} + (a_f - a_{ef})}$ \\
+\hline
+Op2\parencite{Naish2011A} &
+$\mathrm{Susp}(s) = a_{ef} - \frac{a_{ep}}{a_p + 1}$ \\
+\hline
+\end{tabular}
+\caption{部分怀疑度公式}
+\label{susp_formula}
+\end{table}
+
+Xie等人在理论上证明了不存在单一最佳公式\parencite{Xie2013A}。
 
 除了直接提出用于计算的公式之外，研究人员也开始使用机器学习的方法去学习怀疑度的公式。
 Wong等人提出使用反向传播神经网络来定位缺陷\parencite{W2009BP}。
@@ -140,18 +169,19 @@ Wong等人提出使用反向传播神经网络来定位缺陷\parencite{W2009BP}
 
 Liblit等人最早提出了预定义谓词来划分状态\parencite{Liblit2005Scalable}，并提出了统计性调试。
 通过预定义在哪些代码结构中插入哪些谓词，统计性调试能够收集到许多抽象状态的覆盖情况。
-利用表\ref{state_symbol}中的数学符号，统计性调试的公式可以表达为
-$$
-\mathrm{StatisticalDebugging}(s) = \frac{2}{\frac{1}{\frac{t_f}{t_f + t_p} - \frac{a_f}{a_f + a_p}} + \frac{log(F)}{log(t_f)}}
-$$
+% 利用表\ref{state_symbol}中的数学符号，统计性调试的公式可以表达为
+% $$
+% \mathrm{StatisticalDebugging}(s) = \frac{2}{\frac{1}{\frac{t_f}{t_f + t_p} - \frac{a_f}{a_f + a_p}} + \frac{log(F)}{log(t_f)}}
+% $$
 
 Liu等人改进了计算公式，提出了SOBER\parencite{Liu2006Statistical}。
 虽然Liblit的方法可以有效定位一些错误，但是Liblit的方法只考虑了一个谓词是否在一次执行中为真，
 而没有考虑为真的次数。
-SOBER提出新的计算公式。公式计算的是对一个谓词，在失败的测试用例下这个谓词为真的概率分布，和在通过的测试用例下这个谓词为真的概率分布是否相似。
-如果概率分布无论是在失败的测试用例中还是通过的测试用例中都一样，那么这个谓词对应的变量等和缺陷的关系就越小。
-如果两个概率分布相差很大，说明这个谓词对应的抽象状态很有可能就有缺陷状态。
-引入这个缺陷状态的语句很可能就是出错的语句。
+SOBER提出新的计算公式，从概率分布的角度来计算怀疑度。
+% 公式计算的是对一个谓词，在失败的测试用例下这个谓词为真的概率分布，和在通过的测试用例下这个谓词为真的概率分布是否相似。
+% 如果概率分布无论是在失败的测试用例中还是通过的测试用例中都一样，那么这个谓词对应的变量等和缺陷的关系就越小。
+% 如果两个概率分布相差很大，说明这个谓词对应的抽象状态很有可能就有缺陷状态。
+% 引入这个缺陷状态的语句很可能就是出错的语句。
 
 \begin{table}
 \centering

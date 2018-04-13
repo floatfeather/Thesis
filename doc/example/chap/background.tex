@@ -1,11 +1,133 @@
 \chapter{研究背景}
 
-\section{缺陷定位例子}
+\section{缺陷定位数据集}
 
-\section{使用基于频谱的缺陷定位}
+要研究缺陷定位，需要一个包含缺陷的数据集。
+这个数据集一般来说，需要有多个缺陷。
+对每一个缺陷，会有对应的测试用例，和对应的一个正确的版本。
+这些测试用例中既有通过的，也必定有失败的。
+失败的这个测试用例就是由缺陷导致。
 
-\section{使用基于状态覆盖的缺陷定位}
+Siemens数据集\parencite{Hutchins1994Experiments}是一个很早的数据集，用于测试充分性的实验。
+它由七个C程序组成，大小在141行到512行之间。
+这七个C程序衍生出132个有缺陷的C程序。
+每一个错误版本会恰好有一个缺陷。
+这个缺陷可能涉及多行甚至多个文件。
+但是这些程序的缺陷是由作者手动插入的，根据作者的描述其实和一个简单的变异操作非常相似。
+Siemens数据集的输入被构造用于实现完全的代码覆盖。
+尽管它一开始并不是被用于缺陷定位，但是很多缺陷定位技术都使用它来验证效果，比如最早的基于频谱的缺陷定位方法\parencite{Renieres2003Fault}，Ochiai\parencite{Abreu2006An,Abreu2007On}，
+SOBER\parencite{Liu2006Statistical}，BPNN\parencite{W2009BP}等等。
 
+Defects4j数据集\parencite{Just2014Defects4J}是一个真实、独立、可重现缺陷的数据集。
+它由六个Java开源项目的395个缺陷组成（2018年4月时，该数据集仍在更新当中）。
+每一个错误版本会恰好有一个缺陷。
+这个缺陷可能涉及多行甚至多个文件。
+与Siemens数据集相比，Defects4j数据集的缺陷和测试用例都更接近实际开发情况。
+Savant\parencite{Le2016A}就是在Defects4j数据集上验证的。
+
+\section{定位代码中的缺陷}
+
+下面将以实际代码中的缺陷为例子，说明缺陷定位技术是如何定位缺陷的。
+
+\subsection{使用基于频谱的缺陷定位}
+
+基于频谱的缺陷定位对代码的内容没有假设，所使用的信息只有语句的覆盖情况。
+考虑Defects4j中math项目的第五个缺陷，其代码如下：
+\lstset{language=Java}
+\begin{lstlisting}
+public Complex reciprocal() {
+    if (isNaN) {
+        return NaN;
+    }
+
+    if (real == 0.0 && imaginary == 0.0) {
+        return NaN; // Faulty code
+                    // Should be "return INF;"
+    }
+    ...
+}
+\end{lstlisting}
+
+为了使用基于频谱的缺陷定位，我们运行测试用例，并且收集语句的覆盖情况。
+针对第2，3，6，7行语句，得到语句的覆盖情况如表\ref{math_5_statecover}所示。共有一个失败的测试用例。
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+语句 & 被覆盖的失败测试用例个数 & 被覆盖的通过测试用例个数 \\
+\hline
+2 & 1 & 5 \\
+3 & 0 & 1 \\
+6 & 1 & 4 \\
+7 & 1 & 0 \\
+\hline
+\end{tabular}
+\caption{Defects4j中Math的第五个缺陷的测试用例覆盖语句的情况}
+\label{math_5_statecover}
+\end{table}
+
+可以发现，第3行肯定不是缺陷语句，因为它没有被失败的测试用例覆盖过。
+第2，6，7行都有可能是缺陷语句。
+这三行都是被一个失败测试用例覆盖。
+根据它们被覆盖的通过测试用例的个数，可以知道第7行最有可能出错，其次是第6行，最后是第2行。
+这是根据了基于频谱的缺陷定位的假设，即被失败的测试用例执行的语句，更有可能有错误。而被通过的测试用例执行的语句，更有可能是正确的。
+
+利用表\ref{susp_formula}中的公式，计算第2，6，7行的怀疑度，得到表\ref{math_5_susp}。
+可以发现，这五个怀疑度公式都满足
+$$
+\mathrm{Susp}(7) > \mathrm{Susp}(6) > \mathrm{Susp}(2)
+$$
+这五个怀疑度公式都认为第7行是最有可能出错的语句，而第7行也确实是出错的语句。
+这些公式之间的差距不同。比如Tarantula和Op2认为这三行的怀疑度是非常接近的。
+Ochiai，Barinel和DStar认为第2行和第6行的怀疑度接近，而第7行的怀疑度明显高于第2行和第6行的怀疑度。
+
+这个例子体现了基于频谱的错误定位准确定位错误的能力。
+但是实际上效果往往没有这么好。
+其实在该缺陷中，还存在一个正确的语句，它被一个失败的测试用例覆盖过，且从没有被正确的测试用例覆盖过。
+这个正确的语句的频谱信息和错误语句的频谱信息完全一致，所以它们的分数会相同。
+而这个正确的语句将会干扰开发者对缺陷的分析。
+
+\begin{table}
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+公式 & 第2行 & 第6行 & 第7行 \\
+\hline
+Ochiai & 0.4082 & 0.4472 & 1.0000 \\
+\hline
+Tarantula & 0.9988 & 0.9990 & 1.0 \\
+\hline
+Barinel & 0.1667 & 0.2000 & 1.0 \\
+\hline
+DStar & 0.2000 & 0.2500 & Infinity \\
+\hline
+Op2 & 0.9988 & 0.9990 & 1.0 \\
+\hline
+\end{tabular}
+\caption{Defects4j中Math的第五个缺陷的经典公式怀疑度}
+\label{math_5_susp}
+\end{table}
+
+\subsection{使用基于状态覆盖的缺陷定位}
+\label{sec:state_based}
+
+考虑Defects4j数据集中Math的第二个缺陷，其代码如下：
+\lstset{language=Java}
+\begin{lstlisting}
+public double getNumericalMean() {
+    return (double) (getSampleSize() * getNumberOfSuccesses()) / (double) getPopulationSize(); // Faulty code
+    // Should be "return getSampleSize() * (getNumberOfSuccesses() / (double) getPopulationSize())"
+}
+\end{lstlisting}
+
+使用Ochiai方法的话，该错误语句被排到第11位。
+并列的分数将取其平均排名（期望排名），这是很多研究方法所使用的评估方式\parencite{Keller2017Evaluating,Xuan2014Learning,Steimann2013Threats,Wong2016A}。
+事实上该语句的分数位列第2位，但是一共有17个语句和该语句分数并列，导致最终排名为第11位。
+基于频谱的缺陷定位方法在这里失效了。
+其实这个缺陷更加适合使用基于状态覆盖的缺陷定位技术。
+
+状态覆盖就是使用谓词把具体状态划分为抽象状态。
 比如，对于如下代码C代码，
 \lstset{language=C}
 \begin{lstlisting}
@@ -20,3 +142,140 @@ if (update_b) {
 在第1行的时候，考虑两个抽象的状态\mycode{a $\ge$ 0}和\mycode{a $<$ 0}。
 发现通过的测试只有\mycode{a $\ge$ 0}这个状态，而失败的测试只有\mycode{a $<$ 0}这个状态。
 所以可以认为\mycode{a $<$ 0}是缺陷状态，引入这个状态的第1行的语句很可能就是缺陷语句。
+通过谓词\mycode{a $\ge$ 0}和\mycode{a $<$ 0}把程序的具体状态划分成了两个抽象状态，从而定位了第3行的缺陷。
+
+\subsubsection{统计性调试}
+
+Liblit\parencite{Liblit2005Scalable}提出的统计性调试使用预定义谓词。
+预定义谓词分为三类
+\begin{itemize}
+\item \textbf{分支}：对每一个条件语句，观察这个条件语句为真的谓词和为假的谓词。这个条件语句包括\mycode{if}条件这样的，也包括各种隐式的条件比如循环。
+\item \textbf{返回}：在C程序中，一个函数的返回值往往会被用于表达成功或者失败。对于每一个数值的返回值，观察六种谓词$< 0, \le 0, > 0, \ge 0, = 0, \ne 0$。
+\item \textbf{数值对}：对于每一个数值赋值语句\mycode{x = ...}，找到所有和\mycode{x}同类型的、在作用域内的变量\mycode{y}和常量表达式\mycode{c}。对于每个\mycode{y}和\mycode{c}，观察六种谓词$<, \le, >, \ge, =, \ne$。
+\end{itemize}
+通过预定义谓词被测试用例的覆盖情况，计算得到每个谓词对应的怀疑度：
+$$
+\mathrm{StatisticalDebugging}(s) = \frac{2}{\frac{1}{\frac{t_f}{t_f + t_p} - \frac{a_f}{a_f + a_p}} + \frac{log(F)}{log(t_f)}}
+$$
+
+当把统计性调试应用到Defects4j数据集中Math的第二个缺陷时，会在出错的代码处增加谓词，因为出错的代码处刚好是一个返回。
+虽然在Java程序中，函数返回值不会像C程序那样经常用于表达成功或失败，但是这些返回值有时也表达出程序执行的一些信息。
+比如在Math的第二个缺陷中，会发现该错误语句处的六个谓词会有表\ref{math_2_return}中的覆盖情况。
+另外还有$a_f = 1$，$a_p = 6$。
+然而谓词1、2、5这些真分支被失败的测试用例覆盖的谓词的怀疑度都为0，谓词3、4、6的怀疑度都为负数。
+因为谓词1，2，5的$t_f = 1$，导致$log(t_f) = 0$，然后$\frac{log(F)}{log(t_f)} = INF$，
+于是最终计算得到的怀疑度为0。
+而谓词3、4、6由于$t_f = 0$，导致$log(t_f) = -INF$，致使分母中第二项为0。
+虽然谓词1、2、5的分数比3、4、6的分数高，但是0分并没有让这个出错的语句在整个代码的执行语句中排到前面。
+事实上对于所有真分支被失败用例覆盖的语句，由于其$t_f = 1$，最终其怀疑度都为0。
+由于每个谓词都存在和它取值相反的另一个谓词（比如\mycode{x > y}和\mycode{x <= y}），所以$t_f = 1$总是存在的。
+
+在这个例子中，其实统计性调试得到了具有划分缺陷状态和非缺陷状态的谓词。
+但是由于统计性调试的需要多个失败的测试用例覆盖出错的语句，而在Defects4j这个数据集中多数缺陷都只有一个测试用例覆盖到，
+导致统计性调试的效果在Defects4j数据集上效果不好。
+在Liblit\parencite{Liblit2005Scalable}的实验中，对每一个研究对象生成32000个随机输入。
+于是一个错误语句往往能被多个失败的测试用例覆盖。
+可见统计性调试的方法在实际数据集里往往只有一个失败的测试用例的情况下并不适用。
+
+\begin{table}
+\centering
+\begin{tabular}{|c|l|c|c|}
+\hline
+ & 谓词 & 谓词为真的失败的测试用例个数$t_f$ & 谓词为真的通过的测试用例个数$t_p$ \\
+\hline
+1 & \mycode{retValue < 0} & 1 & 0 \\
+\hline
+2 & \mycode{retValue <= 0} & 1 & 1 \\
+\hline
+3 & \mycode{retValue > 0} & 0 & 5 \\
+\hline
+4 & \mycode{retValue >= 0} & 0 & 6 \\
+\hline
+5 & \mycode{retValue != 0} & 1 & 5 \\
+\hline
+6 & \mycode{retValue == 0} & 0 & 1 \\
+\hline
+\end{tabular}
+\caption{返回值谓词的覆盖情况，其中 \\ \mycode{retValue = (double) (getSampleSize() * getNumberOfSuccesses()) / (double) getPopulationSize()}}
+\label{math_2_return}
+\end{table}
+
+\subsubsection{SOBER}
+
+SOBER\parencite{Liu2005SOBER}也是基于状态覆盖的错误定位，改进了统计性调试的计算方法。
+SOBER的公式计算的是对一个谓词，在失败的测试用例下这个谓词为真的概率分布，和在通过的测试用例下这个谓词为真的概率分布是否相似。
+如果概率分布无论是在失败的测试用例中还是通过的测试用例中都一样，那么这个谓词对应的变量等和缺陷的关系就越小。
+如果两个概率分布相差很大，说明这个谓词对应的抽象状态很有可能就有缺陷状态。
+引入这个缺陷状态的语句很可能就是出错的语句。
+
+SOBER的计算公式为
+$$
+\mathrm{Sober}(s) = -log(\mathrm{Sim}(f(X|\theta_p), f(X|\theta_f)))
+$$
+其中$f(X|\theta_p)$表示通过的测试用例下这个谓词为真的概率分布，
+$f(X|\theta_f)$表示失败的测试用例下这个谓词为真的概率分布，
+$\mathrm{Sim}$函数则计算这两个概率分布的相似度。
+
+为了计算相似度，首先提出零假设
+$$\mathcal{H}_0 : f(X|\theta_p) = f(X|\theta_f)$$
+即两个概率分布没有区别。
+然后使用总平均$\mu$和方差$\sigma^2$来刻画概率分布，所以零假设为
+$\mu_p = \mu_f$并且$\sigma_p^2 = \sigma_f^2$。
+假设一共有$m$个失败的测试用例，
+令$\textbf{X} = (X_1, X_2, ..., X_m)$是一个从$f(X|\theta_f)$得到的独立同分布随机样本。
+在零假设下，根据中心极限定理，统计量
+$$
+Y = \frac{\sum_{i = 1}^m X_i}{m}
+$$
+渐近于$N(\mu_p, \frac{\sigma_p^2}{m})$，一个均值为$\mu_p$方差为$\frac{\sigma_p^2}{m}$的正态分布。
+令$f(Y|\theta_p)$为$N(\mu_p, \frac{\sigma_p^2}{m})$的概率密度函数。
+使用似然函数$L(\theta_p | Y)$作为相似度计算的函数，有
+$$
+\mathrm{Sim}(f(X|\theta_p), f(X|\theta_f)) = L(\theta_p | Y) = f(Y|\theta_p)
+$$
+根据正态分布的性质，统计量
+$$
+Z = \frac{Y - \mu_p}{\sigma_p / \sqrt{m}}
+$$
+渐近于$N(0,1)$，而且
+$$
+f(Y|\theta_p) = \frac{\sqrt{m}}{\sigma_p}\varphi(Z)
+$$
+其中$\varphi(Z)$是$N(0,1)$的概率密度函数。
+最后得到怀疑度计算公式：
+$$
+\mathrm{Sober}(s) = log\left( \frac{\sigma_p}{\sqrt{m}\varphi(Z)} \right)
+$$
+
+从SOBER的公式可以看出，SOBER仍然是建立在有大量测试用例的基础上。
+少量的测试用例会让概率分布不能准确反映出谓词真假分支的取值分布。
+SOBER的验证实验也是在人造的Siemens数据集上完成的。
+
+在Defects4j的Math的第二个缺陷这个例子中，该错误语句的六个谓词中，\mycode{((double) (getSampleSize() * getNumberOfSuccesses()) / (double) getPopulationSize()) < 0}得分最高，覆盖情况见表\ref{math_2_sober}，怀疑度为360.85。
+在怀疑度列表中排名第10，效果并不理想。
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+测试用例编号 & 覆盖真分支的次数 & 覆盖假分支的次数 & 当前测试用例状态 \\
+\hline
+1 & 0 & 2 & 通过 \\
+\hline
+2 & 0 & 2 & 通过 \\
+\hline
+3 & 0 & 2 & 通过 \\
+\hline
+4 & 0 & 2 & 通过 \\
+\hline
+5 & 1 & 0 & 失败 \\
+\hline
+6 & 0 & 10 & 通过 \\
+\hline
+7 & 0 & 1000 & 通过 \\
+\hline
+\end{tabular}
+\caption{SOBER方法下，Defects4j的Math第二个缺陷的错误语句里，分数最高的谓词的覆盖情况}
+\label{math_2_sober}
+\end{table}
+
