@@ -1,0 +1,276 @@
+\chapter{实现}
+
+\section{机器学习训练与预测}
+
+\subsection{特征提取}
+
+\subsection{特征预处理}
+
+\subsubsection{编码}
+
+对于数值型的变量，直接使用其值作为特征。
+而对于分类变量（categorical variable），虽然其值可能表现为0、1、2……
+这样的数字，但是其实并不存在$0 < 1 < 2$这样的大小关系。
+直接使用其值会让模型以为这个变量存在大小关系。
+所以对于分类变量，本文采取独热（one-hot）编码。
+比如对于一个值为0、1、2的分类变量$v$，使用新的变量$v_0$、$v_1$、$v_2$代替$v$。
+其中$v_i = 1$表示$v = i$，而$v_i = 0$表示$v \ne i$。
+
+\subsubsection{字符串特征编码}
+
+对于字符串类型的特征，比如文件名、函数名和变量名，本文也会使用独热编码。
+但是直接使用独热编码会有两个问题：
+\begin{enumerate}
+\item 特征维度过大。比如对Defects4j中Math项目的第一个缺陷来说，仅不同的方法就有795个。
+这意味着如果把方法改成独热编码，将会把一个1维的特征变成795维的特征。
+这样可能造成维度灾难\parencite{Richard1957Dynamic}。
+虽然一开始随着特征数的上升，机器学习模型的预测效果也会上升，但是当维度过高的时候，实际性能是下降的。
+但这还不是最关键的因素。
+\item 丢失了字符串内部的特征。
+字符串的变量和其它的变量不同，它们之间还有内部的特征。
+比如变量名len和length之间的相似度比len和domain之间的相似度要高，
+文件名SubLine.java和Line.java之间的相似度比SubLine.java和BracketFinder.java之间的相似度高。
+简单地把不同字符串看成完全独立地不同特征会丢失很多有用的信息。
+\end{enumerate}
+
+对字符串的编码采取三步。
+
+首先是将字符串转换为向量。对变量名，采取一种类似2-gram的方法。
+每一个变量名都会被转成一个长度为$729 (27 \times 27)$的一维向量。
+变量名中的大写字母会先被转为小写字符。
+对转换后的变量名$s_1s_2...s_n$，考虑每两个相邻字符的字符串$s_1s_2$，$s_2s_3$……$s_{n - 1}s_n$。
+这个向量的第i位为1表示变量名中存在两个相邻字符$s_js_{j+1}$，满足$f(s_j) \times 27 + f(s_{j + 1}) = i$。
+$f$是一个映射函数，将一个字符转换成一个0到26之间的数字。
+对于$f$有$f('a') = 0, f('b') = 1, ..., f('z') = 25$，然后a到z以外的字符都被转为26。
+这样的话len和length的特征向量之间就会有两位相同，而len和domain之间则完全没有相同的。
+对函数名和文件名，去掉后缀，然后利用Java中使用的驼峰命名法将它们按照驼峰分割开来。
+比如SubLine.java会被拆为Sub和Line，而Line.java得到Line，BracketFinder.java得到Bracket和Finder。
+收集所有分割后的词（函数名和文件名分开收集），假设有$N_{func}$和$N_{file}$个，
+则每个函数名（或文件名）就转成一个长度为$N_{func}$（或$N_{file}$）的向量。
+这个向量的第i位为1表示函数名（或文件名）中含有字符串$g_{func}(i)$（$g_{file}(i)$）。
+$g_{func}$和$g_{file}$是向量下标和字符串的映射。
+比如$g_{file}(57) = "Line"$的话，Line.java的向量的第57位为1，其他位为0。
+
+然后是对字符串转换后的向量进行聚类。
+聚类使用的是scikit-learn\todo{cite}的K-means聚类算法。
+因为不同的项目所涉及的变量名、函数名、文件名数量差别较大，不适合使用单一的某个常数作为聚类的类别数。
+所以聚类的类别数为$Unique(names) / 20$。
+其中$names$表示所有变量名或函数名或文件名，$Unique(x)$表示$x$中不重复的值的数量。
+
+最后是根据聚类给字符串编码。
+加入聚类结果有$N$个类，那么就把这$N$个类编号为$1$到$N$。
+每个类中的每个字符串的编号等于它所处的类的编号。
+每个字符创的编号就是它的特征值，对这个特征值使用独热编码就得到最终的特征。
+于是通过重新编码和聚类，字符串特征的内部特征被抽取出来，并且字符串特征的维度也被大幅减小。
+
+\subsubsection{预测时的特征新值}
+
+在预测的时候，特征里面可能会有在训练的特征里面没有出现过的值。
+如果这个值是数值型的值，那么直接使用这个值就可以。
+但是如果是经过编码之后的值，就需要给这个新值一个编码。
+
+为了给出一个和训练时编码一致的编码，需要保存训练时的部分数据。
+包括变量名、文件名、函数名的聚类模型，文件名、函数名中向量下标和字符串的对应函数$g_{func}$、$g_{file}$，
+训练时使用的独热编码。
+
+对于新的变量名，按照训练时的处理方法将其转为$729 (27 \times 27)$的一维向量。
+然后计算出这个向量与训练时变量名聚类模型中的哪个中心点距离更短，把这个变量名划入这个中心点的分类。
+最后使用训练时变量名的独热编码给这个分类编码即可。
+
+对于新的文件名或函数名，有两种情况。
+第一种情况是，这个文件名虽然没有出现过，但是它按照驼峰拆分之后的字符串都出现过。
+这种情况下使用$g_{func}$和$g_{file}$直接构造特征向量。
+第二种情况是，这个文件名按照驼峰拆分之后的字符串有没有出现过的。
+没有出现过的字符串则会被忽略。
+构造出的特征向量使用训练时的聚类模型划分分类，最后使用训练时的独热编码给改分类编码。
+
+对于除变量名、文件名、函数名以外的分类变量，
+如果出现了新的值，假设这个分类变量的类别有$C$个，
+那么新值转成独热编码后其特征向量为$C$个0。
+
+\subsection{神经网络模型}
+
+神经网络使用的全连接神经网络，由TensorFlow\todo{cite}实现。
+VAR模型和EXPR模型都是六层的全连接神经网络，再加一层softmax层。
+六层是因为\todo{cite}。
+每层有64个节点，激励函数使用\todo{tf激励函数}。
+
+\subsection{决策树模型}
+
+决策树使用scikit-learn中的决策树DecisionTreeClassfier。
+
+\section{收集频谱信息}
+
+代码插装是一种常用的记录程序执行情况、修改程序的方法。
+采用的工具是eclipse提供的Java Development Tool\footnote{\url{http://www.eclipse.org/jdt/}}，简称JDT。
+JDT不仅可以构造给定Java代码的抽象语法树，还可以新建、修改、插入、删除抽象语法树从而新建、修改、插入、删除Java代码。
+本章中很多实现都依赖于JDT。
+
+本文使用代码插装技术主要目的是收集频谱信息。
+比如为了收集失败测试用例覆盖的语句，可以在每个语句后面加上一个打印语句。
+这个打印语句会打印出当前的文件名和对应语句的行数。
+用失败的测试用例执行这个插装后的程序，就可以得到失败测试用例覆盖的语句。
+
+对于谓词$P$和一个测试用例$T_i$，可能需要收集种信息：
+\begin{enumerate}
+\item $P$是否被$T$观察过（无论是真还是假）。
+\item $T_i$中$P$是否至少一次为真。
+\item $T_i$中$P$为真的次数。
+\item $T_i$中$P$为假的次数。
+\end{enumerate}
+
+对于基于频谱的缺陷定位的公式来说，需要第2个信息。
+对于统计性调试的公式来说，需要第1、2个信息。
+对于SOBER的公式来说，需要第3、4个信息。
+所以整体来说谓词的插装有两种形式。
+第一种用于基于频谱的缺陷定位公式和统计性调试公式：
+\lstset{language=Java}
+\begin{lstlisting}
+// predicateSignature is a string that uniquely represents the predicate.
+SpecLogger.observe(predicateSignature);
+if (predicate) {
+    SpecLogger.cover(predicateSignature);
+}
+\end{lstlisting}
+\mycode{SpecLogger.observe}记录这个谓词为观察过（信息1），
+\mycode{SpecLogger.cover}记录这个谓词为真过（信息2）。
+第二种用于SOBER公式：
+\lstset{language=Java}
+\begin{lstlisting}
+// predicateSignature is a string that uniquely represents the predicate.
+if (predicate) {
+    SpecLogger.coverTrueBranch(predicateSignature);
+} else {
+    SpecLogger.coverFalseBranch(predicateSignature);
+}
+\end{lstlisting}
+\mycode{SpecLogger.coverTrueBranch}记录这个谓词为真的次数（信息3），
+\mycode{SpecLogger.coverFalseBranch}记录这个谓词为假的次数（信息4）。
+
+这几个$SpecLogger$的函数可以是把自己内部的某个布尔型的成员变量置为真或假，
+也可以是把自己内部的某个整型的成员变量加一。
+这个$SpecLogger$对象在每个测试用例开始的时候重置（使用静态方法变量），并在测试用例结束的时候以某种格式将自己记录的信息输出到文件。
+\lstset{language=Java}
+\begin{lstlisting}
+private void testSomething() {
+	SpecLogger.reset();
+    SpecLogger.testStatus = true;
+
+    // test ...
+    ...
+
+    SpecLogger.dump();
+}
+\end{lstlisting}
+第三行是根据当前测试用例\mycode{testSomething}是通过的测试用例还是失败的测试用例而插装的。
+最后\mycode{SpecLogger.dump}把记录的信息输出到文件。
+其他程序从这个输出文件中可以构造出频谱信息。
+
+\section{插入预测的谓词}
+
+插入谓词仍然使用JDT。
+
+通过机器学习模型，每个语句可能会关联一组谓词。
+这些谓词会被机器学习模型赋予出现的概率。
+最终每个语句我们选择概率最高的5个谓词作为需要插入的谓词。
+
+在插入预测的谓词之前，要先对谓词进行过滤。
+过滤包括两步：
+\begin{enumerate}
+\item 静态分析过滤掉可能不合法的谓词（比如对一个\mycode{int}类型的变量进行下标访问）。
+\item 静态分析过滤掉可能有副作用的谓词。
+\item 过滤掉不能编译的谓词。
+\end{enumerate}
+
+一个预测出来的谓词分为两部分，一个是谓词$P(x)$，一个是变量$v$，最终构成谓词$P(v)$。
+一个谓词会被判定为不合法如果它满足以下至少一点：
+\begin{itemize}
+\item 含有数组访问\mycode{v[i]}且\mycode{v}并不是数组类型。
+\item 含有变量访问\mycode{v.a}且\mycode{v}是一个基本数据类型（比如\mycode{int}）的变量。
+\todo{bug fix}
+\item 含有变量访问\mycode{a.v}且\mycode{v}不是\mycode{a}的一个域。
+\item \todo{simple name}
+\item 含有函数调用\mycode{v.a()}且\mycode{v}是一个基本数据类型变量。
+\item 含有函数调用\mycode{f()}且\mycode{f}不属于预定义的合法函数（如\mycode{size}，\mycode{length}，\mycode{toString}，\mycode{contains}，\mycode{containsKey}，\mycode{Math.abs}，\mycode{Double.isInfinite}，\mycode{Double.isNaN}）。
+\item 含有域访问\mycode{v.a}且\mycode{v}是一个基本数据类型的变量。
+\item 含有中缀表达式\mycode{a op b}且\mycode{a,b}的类型和运算符\mycode{op}不匹配（比如对非数字类型进行加法）。
+\end{itemize}
+
+过滤有副作用的谓词主要是过滤掉以下几种：
+\begin{itemize}
+\item 含有前缀表达式，且其中运算符为\mycode{++}或\mycode{--}。
+\item 含有后缀表达式。
+\item 含有赋值语句。
+\end{itemize}
+
+最后单独地插入每一条谓词，过滤掉不能顺利编译的。
+在没有判定谓词是否合法的时候，也可以通过编译来排除不合法的谓词。
+但是由于谓词数量较多，通过预处理去掉部分肯定不对的谓词可以加速整个流程。
+
+最后对于一个语句$s$，我们可以得到一组合法无副作用的谓词${P_1,P_2...}$。
+我们再加入取反的谓词${!P_1, !P_2, ...}$。
+
+然后就是将收集谓词频谱信息的代码插入到语句前或后。
+语句前后都插入的有\mycode{WhileStatement，ForStatement，DoStatement，EnhancedForStatement}，
+插入在语句后面的有\mycode{Assignment，VariableDeclarationStatement, ConstructorInvocation, SuperConstructorInvocation}，
+插入在语句前的有\mycode{IfStatement，SwitchStatement}等其他所有语句。
+
+\section{插入预定义的谓词}
+
+预定义的谓词也可能有副作用，比如赋值语句\mycode{a[b++] = c}的谓词\mycode{a[b++] > d}，
+如果使用此前的插装方法，则插入\mycode{if (a[b++] > d)}这样的语句会产生副作用。
+但是如果使用中间变量，则上述代码可以重写为：
+\lstset{language=Java}
+\begin{lstlisting}
+temp = c;
+a[b++] = temp;
+if (temp > d) {
+    ...
+}
+\end{lstlisting}
+所以预定义谓词的三种情况，分支、返回、数值对，都可以使用中间变量这样的方式来插入谓词，从而避免了副作用的情况。
+
+由于分支对应多种情况，使用中间变量会比较复杂。
+分支的谓词是分支中含有的条件表达式。
+\mycode{DoStatement}中的条件表达式的值每次循环都会更新，再考虑上\mycode{continue}这样的语句，
+会让条件表达式的更新逻辑非常复杂。
+为了简单地插入谓词，使用一个函数\mycode{logConditionCoverage}替换条件表达式。
+原代码为：
+\lstset{language=Java}
+\begin{lstlisting}
+// example.java:
+while(!iter.isEmpty()) {
+	...
+}
+\end{lstlisting}
+插装了收集谓词频谱信息的语句后，代码被修改为：
+\lstset{language=Java}
+\begin{lstlisting}
+// example.java
+while(SpecLogger.logConditionCoverage(!iter.isEmpty(), "!iter.isEmpty()", "!(!iter.isEmpty())") {
+	...
+}
+
+// SpecLogger.java
+public static boolean logConditionCoverage(boolean condition, String trueLogInfo, String falseLogInfo) {
+	observe(trueLogInfo);
+	observe(falseLogInfo);
+	if (condition) {
+		cover(trueLogInfo);
+	} else {
+		cover(falseLogInfo);
+	}
+	return condition;
+}
+\end{lstlisting}
+这里同时记录了假分支的覆盖情况。这样做有两个目的：
+\begin{itemize}
+\item 统计性调试中预定义的分支型谓词有条件表达式取反。
+\item 和预测谓词加入了谓词取反的情况保持一致。
+\end{itemize}
+
+\section{计算怀疑度}
+
+收集频谱信息后，就可以带入计算怀疑度。
+无论是机器学习得到的谓词，还是预定义的谓词，都使用表\ref{susp_formula}中的五种公式，以及统计性调试和SOBER总共七种公式进行计算。
+
