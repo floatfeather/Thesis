@@ -1,35 +1,9 @@
-\chapter{研究背景}
+\chapter{问题分析}
 
-\section{缺陷定位数据集}
+本章将基于频谱的缺陷定位和基于状态覆盖的缺陷定位应用在数据集Defects4j的某些缺陷上，
+分析这些技术在实际缺陷上的优点与不足。
 
-要研究缺陷定位，需要一个包含缺陷的数据集。
-这个数据集一般来说，需要有多个缺陷。
-对每一个缺陷，会有对应的测试用例，和对应的一个正确的版本。
-这些测试用例中既有通过的，也必定有失败的。
-失败的这个测试用例就是由缺陷导致。
-
-Siemens数据集\parencite{Hutchins1994Experiments}是一个很早的数据集，用于测试充分性的实验。
-它由七个C程序组成，大小在141行到512行之间。
-这七个C程序衍生出132个有缺陷的C程序。
-每一个错误版本会恰好有一个缺陷。
-这个缺陷可能涉及多行甚至多个文件。
-但是这些程序的缺陷是由作者手动插入的，根据作者的描述其实和一个简单的变异操作非常相似。
-Siemens数据集的输入被构造用于实现完全的代码覆盖。
-尽管它一开始并不是被用于缺陷定位，但是很多缺陷定位技术都使用它来验证效果，比如最早的基于频谱的缺陷定位方法\parencite{Renieres2003Fault}，Ochiai\parencite{Abreu2006An,Abreu2007On}，
-SOBER\parencite{Liu2006Statistical}，BPNN\parencite{W2009BP}等等。
-
-Defects4j数据集\parencite{Just2014Defects4J}是一个真实、独立、可重现缺陷的数据集。
-它由六个Java开源项目的395个缺陷组成（2018年4月时，该数据集仍在更新当中）。
-每一个错误版本会恰好有一个缺陷。
-这个缺陷可能涉及多行甚至多个文件。
-与Siemens数据集相比，Defects4j数据集的缺陷和测试用例都更接近实际开发情况。
-Savant\parencite{Le2016A}就是在Defects4j数据集上验证的。
-
-\section{定位代码中的缺陷}
-
-下面将以实际代码中的缺陷为例子，说明缺陷定位技术是如何定位缺陷的。
-
-\subsection{使用基于频谱的缺陷定位}
+\section{使用基于频谱的缺陷定位}
 
 基于频谱的缺陷定位对代码的内容没有假设，所使用的信息只有语句的覆盖情况。
 考虑Defects4j中math项目的第五个缺陷，其代码如下：
@@ -73,6 +47,56 @@ public Complex reciprocal() {
 根据它们被覆盖的通过测试用例的个数，可以知道第7行最有可能出错，其次是第6行，最后是第2行。
 这是根据了基于频谱的缺陷定位的假设，即被失败的测试用例执行的语句，更有可能有错误。而被通过的测试用例执行的语句，更有可能是正确的。
 
+为方便此后的表述，引入一些数学符号，见表\ref{spec_symbol}。表中的统计量就是程序频谱。
+\begin{table}
+\centering
+\begin{tabular}{|c|c|}
+\hline
+$a_{ef}$ & 一个语句被失败的测试用例覆盖的次数 \\
+\hline
+$a_{nf}$ & 一个语句未被失败的测试用例覆盖的次数 \\
+\hline
+$a_{ep}$ & 一个语句被通过的测试用例覆盖的次数 \\
+\hline
+$a_{np}$ & 一个语句未被通过的测试用例覆盖的次数 \\
+\hline
+$a_{f}$ & 失败的测试用例的个数 \\
+\hline
+$a_{p}$ & 通过的测试用例执行的次数 \\
+\hline
+\end{tabular}
+\caption{基于频谱的错误定位的数学符号及其意义}
+\label{spec_symbol}
+\end{table}
+
+表\ref{susp_formula}中列出了部分经典的怀疑度公式。
+这些公式都遵循被失败的测试用例执行的语句，更有可能有错误。而被通过的测试用例执行的语句，更有可能是正确的。
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+公式名称 & 公式 \\
+\hline
+Ochiai\parencite{Abreu2006An} & $\mathrm{Susp}(s) = \frac{a_{ef}}{\sqrt{a_{f} \times (a_{ef} + a_{ep})}}$ \\
+\hline
+Tarantula\parencite{Jones2002Visualization} &
+$\mathrm{Susp}(s) = \frac{\frac{a_{ep}}{a_{p}}}{\frac{a_{ep}}{a_{p}} + \frac{a_{ef}}{a_{f}}}$ \\
+\hline
+Barinel\parencite{Abreu2009Spectrum} &
+$\mathrm{Susp}(s) = 1 - \frac{a_{ep}}{a_{ep} + a_{ef}}$ \\
+\hline
+DStar\parencite{Wong2014The} &
+$\mathrm{Susp}(s) = \frac{2}{a_{ep} + (a_f - a_{ef})}$ \\
+\hline
+Op2\parencite{Naish2011A} &
+$\mathrm{Susp}(s) = a_{ef} - \frac{a_{ep}}{a_p + 1}$ \\
+\hline
+\end{tabular}
+\caption{部分基于频谱的缺陷定位怀疑度公式}
+\label{susp_formula}
+\end{table}
+
 利用表\ref{susp_formula}中的公式，计算第2，6，7行的怀疑度，得到表\ref{math_5_susp}。
 可以发现，这五个怀疑度公式都满足
 $$
@@ -109,7 +133,7 @@ Op2 & 0.9988 & 0.9990 & 1.0 \\
 \label{math_5_susp}
 \end{table}
 
-\subsection{使用基于状态覆盖的缺陷定位}
+\section{使用基于状态覆盖的缺陷定位}
 \label{sec:state_based}
 
 考虑Defects4j数据集中Math的第二个缺陷，其代码如下：
@@ -144,7 +168,7 @@ if (update_b) {
 所以可以认为\mycode{a $<$ 0}是缺陷状态，引入这个状态的第1行的语句很可能就是缺陷语句。
 通过谓词\mycode{a $\ge$ 0}和\mycode{a $<$ 0}把程序的具体状态划分成了两个抽象状态，从而定位了第3行的缺陷。
 
-\subsubsection{统计性调试}
+\subsection{统计性调试}
 
 Liblit\parencite{Liblit2005Scalable}提出的统计性调试使用预定义谓词。
 预定义谓词分为三类
@@ -153,6 +177,28 @@ Liblit\parencite{Liblit2005Scalable}提出的统计性调试使用预定义谓�
 \item \textbf{返回}：在C程序中，一个函数的返回值往往会被用于表达成功或者失败。对于每一个数值的返回值，观察六种谓词$< 0, \le 0, > 0, \ge 0, = 0, \ne 0$。
 \item \textbf{数值对}：对于每一个数值赋值语句\mycode{x = ...}，找到所有和\mycode{x}同类型的、在作用域内的变量\mycode{y}和常量表达式\mycode{c}。对于每个\mycode{y}和\mycode{c}，观察六种谓词$<, \le, >, \ge, =, \ne$。
 \end{itemize}
+为方便此后的表述，引入数学符号表\ref{state_symbol}。
+\begin{table}
+\centering
+\begin{tabular}{|c|c|}
+\hline
+$t_f$ & 一个谓词被观测为真的失败的测试用例的个数 \\
+\hline
+$t_p$ & 一个谓词被观测为真的通过的测试用例的个数 \\
+\hline
+$a_f$ & 一个谓词被观测的失败的测试用例的个数（谓词不一定为真）\\
+\hline
+$a_p$ & 一个谓词被观测的通过的测试用例的个数（谓词不一定为真）\\
+\hline
+$F$ & 失败的测试用例的个数 \\
+\hline
+$P$ & 通过的测试用例执行的次数 \\
+\hline
+\end{tabular}
+\caption{统计性调试的数学符号及其意义}
+\label{state_symbol}
+\end{table}
+
 通过预定义谓词被测试用例的覆盖情况，计算得到每个谓词对应的怀疑度：
 $$
 \mathrm{StatisticalDebugging}(s) = \frac{2}{\frac{1}{\frac{t_f}{t_f + t_p} - \frac{a_f}{a_f + a_p}} + \frac{log(F)}{log(t_f)}}
@@ -200,7 +246,7 @@ $$
 \label{math_2_return}
 \end{table}
 
-\subsubsection{SOBER}
+\subsection{SOBER}
 
 SOBER\parencite{Liu2005SOBER}也是基于状态覆盖的错误定位，改进了统计性调试的计算方法。
 SOBER的公式计算的是对一个谓词，在失败的测试用例下这个谓词为真的概率分布，和在通过的测试用例下这个谓词为真的概率分布是否相似。
@@ -279,6 +325,15 @@ SOBER的验证实验也是在人造的Siemens数据集上完成的。
 \label{math_2_sober}
 \end{table}
 
-\section{机器学习技术}
+\section{分析结论}
 
-\subsection{K-means}
+在以上的例子和分析中我们发现，现有缺陷定位存在不足。
+
+对于基于频谱的缺陷定位来说，它仅仅依赖频谱信息去区分正确语句和错误语句，
+会导致很多正确语句也具有很高的怀疑度。
+特别地，如果一个正确语句只被失败的测试用例覆盖，那么它将拥有非常高的怀疑度。
+这是由于频谱信息的信息量太少，基于频谱的缺陷定位忽略了程序状态等被基于状态覆盖的缺陷定位关注的信息。
+
+而基于状态覆盖的缺陷定位，虽然能够获得比频谱信息更多的信息，
+但是现有的方法都依赖于大量的测试用例。
+在测试用例不足的时候，基于状态覆盖的缺陷定位无法给出具有区分度的怀疑度。

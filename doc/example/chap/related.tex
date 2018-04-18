@@ -1,29 +1,8 @@
 \chapter{相关工作}
 
-\section{缺陷定位技术}
+本章讲介绍自动缺陷定位、机器学习的相关工作和缺陷定位所使用的数据集以帮助更好理解本文的工作。
 
-随着软件的发展，生活中越来越多的方面都与软件有着紧密的关系。
-小到人们的日常出行、购物、餐饮等，大到航空航天、医药等领域，软件在人们的生活中扮演着重要的角色。
-随着软件的应用领域的扩大，软件的复杂性上升，提升了软件缺陷的可能性。
-软件缺陷可能会导致巨大的损失。
-一个著名的被广泛引用的例子，是在海湾战争时，一颗导弹由于导航软件的精度缺陷而偏离了目标，导致28人死亡和100人受伤\todo{cite}。
-美国国家标准与技术研究院(NIST)2002年发表的一篇报告(\todo{cite})显示，软件缺陷每年会导致约595亿美元的经济损失。\todo{每年这么多国内公司漏洞事件}
-发现并修复软件缺陷，保障软件的高质量成为一项重要的任务。
-
-在发现软件缺陷之后，开发人员为了解决这个缺陷往往需要三步\parencite{Parnin2011Are}。
-第一步，缺陷定位，需要找到程序中和这个缺陷有关的语句。
-第二步，理解缺陷，明白为什么会发生缺陷。
-第三步，修复缺陷，修改代码以让缺陷消失。
-这三个步骤合起来就是调试的过程。缺陷定位作为调试的第一步，其完成速度和准确性对后面的步骤有着很大的影响。
-在传统的开发环境当中，人们可以手动调试来定位缺陷，比如插入断点、打印日志信息等等。
-在1989年Collofello等人就指出尝试去减少软件中的错误会花费50\%到80\%的开发和维护的精力\parencite{Collofello1989Evaluating}。
-随着软件的复杂性的上升，手动地定位软件缺陷将会耗费更多开发者的时间和精力。
-为了提高定位缺陷的速度，研究人员对自动化的缺陷定位展开了研究，并取得了巨大的进展\todo{cite}。
-然而在2011年，Partin和Osro的一篇调查\parencite{Parnin2011Are}通过研究缺陷定位技术在实际应用场景下的效果，发现以往的评价指标并不能准确的反映缺陷定位技术在实际应用中的效果。
-以往的缺陷定位技术是基于一系列关于开发人员会如何调试的假设，而这些假设在实际场景的某些情况下会失效。
-自动化缺陷定位技术还有很大的发展空间。
-
-\subsection{自动缺陷定位技术概述}
+\section{自动缺陷定位相关工作}
 
 程序切片\parencite{Weiser1981Program,Weiser1984Program}是自动调试最早的技术之一，
 但是程序切片之后可能出错的语句数量仍然比较庞大。
@@ -75,28 +54,6 @@ Renieris等人在2003年提出使用通过的测试用例和失败的测试用�
 利用通过的测试用例覆盖的语句的交集和并集，与失败的测试用例覆盖的语句取差集，是最早的一种基于频谱的缺陷定位方法\parencite{Renieres2003Fault}。
 这种方法也隐含着基于频谱的缺陷定位的假设：被失败的测试用例执行的语句，更有可能有错误。而被通过的测试用例执行的语句，更有可能是正确的。
 
-为方便此后的表述，引入一些数学符号，见表\ref{spec_symbol}。表中的统计量就是程序频谱。
-\begin{table}
-\centering
-\begin{tabular}{|c|c|}
-\hline
-$a_{ef}$ & 一个语句被失败的测试用例覆盖的次数 \\
-\hline
-$a_{nf}$ & 一个语句未被失败的测试用例覆盖的次数 \\
-\hline
-$a_{ep}$ & 一个语句被通过的测试用例覆盖的次数 \\
-\hline
-$a_{np}$ & 一个语句未被通过的测试用例覆盖的次数 \\
-\hline
-$a_{f}$ & 失败的测试用例的个数 \\
-\hline
-$a_{p}$ & 通过的测试用例执行的次数 \\
-\hline
-\end{tabular}
-\caption{基于频谱的错误定位的数学符号及其意义}
-\label{spec_symbol}
-\end{table}
-
 Jones等人提出的Tarantula\parencite{Jones2002Visualization}，直观地展示给开发者展示了每个语句在通过的测试用例和失败的测试用例下的参与情况。
 参与情况也被称为怀疑度。
 % 每条语句的参与情况，使用公式
@@ -115,34 +72,6 @@ Tarantula之后，又有很多计算怀疑度的公式被提出。
 % $$
 Ochiai由\parencite{Meyer2004Comparison}提出用于计算基因的相似度。
 Abreu等人将其引入用于计算怀疑度，并与Jaccard\parencite{Chen2002Pinpoint}，Tarantula，AMPLE\parencite{Dallmeier2005Lightweight}比较，发现Ochiai计算的怀疑度使得定位效果更好\parencite{Abreu2006An,Abreu2007On}。
-
-表\ref{susp_formula}中列出了部分经典的怀疑度公式。
-这些公式都遵循被失败的测试用例执行的语句，更有可能有错误。而被通过的测试用例执行的语句，更有可能是正确的。
-
-\begin{table}
-\centering
-\begin{tabular}{|c|c|c|}
-\hline
-公式名称 & 公式 \\
-\hline
-Ochiai\parencite{Abreu2006An} & $\mathrm{Susp}(s) = \frac{a_{ef}}{\sqrt{a_{f} \times (a_{ef} + a_{ep})}}$ \\
-\hline
-Tarantula\parencite{Jones2002Visualization} &
-$\mathrm{Susp}(s) = \frac{\frac{a_{ep}}{a_{p}}}{\frac{a_{ep}}{a_{p}} + \frac{a_{ef}}{a_{f}}}$ \\
-\hline
-Barinel\parencite{Abreu2009Spectrum} &
-$\mathrm{Susp}(s) = 1 - \frac{a_{ep}}{a_{ep} + a_{ef}}$ \\
-\hline
-DStar\parencite{Wong2014The} &
-$\mathrm{Susp}(s) = \frac{2}{a_{ep} + (a_f - a_{ef})}$ \\
-\hline
-Op2\parencite{Naish2011A} &
-$\mathrm{Susp}(s) = a_{ef} - \frac{a_{ep}}{a_p + 1}$ \\
-\hline
-\end{tabular}
-\caption{部分怀疑度公式}
-\label{susp_formula}
-\end{table}
 
 Xie等人在理论上证明了不存在单一最佳公式\parencite{Xie2013A}。
 
@@ -182,27 +111,6 @@ SOBER提出新的计算公式，从概率分布的角度来计算怀疑度。
 % 如果概率分布无论是在失败的测试用例中还是通过的测试用例中都一样，那么这个谓词对应的变量等和缺陷的关系就越小。
 % 如果两个概率分布相差很大，说明这个谓词对应的抽象状态很有可能就有缺陷状态。
 % 引入这个缺陷状态的语句很可能就是出错的语句。
-
-\begin{table}
-\centering
-\begin{tabular}{|c|c|}
-\hline
-$t_f$ & 一个谓词被观测为真的失败的测试用例的个数 \\
-\hline
-$t_p$ & 一个谓词被观测为真的通过的测试用例的个数 \\
-\hline
-$a_f$ & 一个谓词被观测的失败的测试用例的个数（谓词不一定为真）\\
-\hline
-$a_p$ & 一个谓词被观测的通过的测试用例的个数（谓词不一定为真）\\
-\hline
-$F$ & 失败的测试用例的个数 \\
-\hline
-$P$ & 通过的测试用例执行的次数 \\
-\hline
-\end{tabular}
-\caption{基于状态覆盖的错误定位的数学符号及其意义}
-\label{state_symbol}
-\end{table}
 
 除了预定义谓词以外，研究人员还提出各种从程序中获取谓词的方法。
 Le等人提出Savant\parencite{Le2016A}，使用程序中的不变式的变化来划分状态。
@@ -299,3 +207,29 @@ Shapiro提出的算法式调试\parencite{Shapiro1982Algorithmic}，通过对子
 差异化调试关注程序状态，特别地，差异化调试关注当程序没有出错时的程序状态和程序出错时的程序状态。
 差异化调试尝试找到一个最小的修改集合，当把这个集合应用到没有出错时的程序状态后，程序出错了。
 
+\section{机器学习相关工作}
+
+\section{缺陷定位的数据集}
+
+要研究缺陷定位，需要一个包含缺陷的数据集。
+这个数据集一般来说，需要有多个缺陷。
+对每一个缺陷，会有对应的测试用例，和对应的一个正确的版本。
+这些测试用例中既有通过的，也必定有失败的。
+失败的这个测试用例就是由缺陷导致。
+
+Siemens数据集\parencite{Hutchins1994Experiments}是一个很早的数据集，用于测试充分性的实验。
+它由七个C程序组成，大小在141行到512行之间。
+这七个C程序衍生出132个有缺陷的C程序。
+每一个错误版本会恰好有一个缺陷。
+这个缺陷可能涉及多行甚至多个文件。
+但是这些程序的缺陷是由作者手动插入的，根据作者的描述其实和一个简单的变异操作非常相似。
+Siemens数据集的输入被构造用于实现完全的代码覆盖。
+尽管它一开始并不是被用于缺陷定位，但是很多缺陷定位技术都使用它来验证效果，比如最早的基于频谱的缺陷定位方法\parencite{Renieres2003Fault}，Ochiai\parencite{Abreu2006An,Abreu2007On}，
+SOBER\parencite{Liu2006Statistical}，BPNN\parencite{W2009BP}等等。
+
+Defects4j数据集\parencite{Just2014Defects4J}是一个真实、独立、可重现缺陷的数据集。
+它由六个Java开源项目的395个缺陷组成（2018年4月时，该数据集仍在更新当中）。
+每一个错误版本会恰好有一个缺陷。
+这个缺陷可能涉及多行甚至多个文件。
+与Siemens数据集相比，Defects4j数据集的缺陷和测试用例都更接近实际开发情况。
+Savant\parencite{Le2016A}就是在Defects4j数据集上验证的。
