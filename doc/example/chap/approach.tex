@@ -232,14 +232,39 @@ $g_{func}$和$g_{file}$是向量下标和字符串的映射。
 
 \subsubsection{神经网络模型}
 
-神经网络使用的全连接神经网络，由TensorFlow\todo{cite}实现。
-VAR模型和EXPR模型都是六层的全连接神经网络，再加一层softmax层。
-六层是因为\todo{cite}。
-每层有64个节点，激励函数使用\todo{tf激励函数}。
+神经网络使用的全连接神经网络，用TensorFlow\footnote{\url{https://www.tensorflow.org/}}实现。
+TensorFlow是一个采用数据流图用于数值计算的开源软件库。
+图中的节点表示数学操作，图中的线则表示在节点间相互联系的多维数据数组。
+
+VAR模型和EXPR模型使用同样的神经网络。
+这个神经网络由一个输入层，六个隐藏层，一个输出层，一个softmax层构成。
+输入层的神经元数量和特征数量一致，输出层的神经元数量和分类数量一致。
+对于VAR模型来说输出层的神经元有两个，对于EXPR模型来说输出层的神经元数量和可能的谓词数量一样。
+六个隐藏层每层都是64个节点。这个是小部分实验之后得出的比较适合的值。
+采用的激励函数是广泛使用的线性整流函数（ReLU）。
+$$
+\mathrm{ReLU}(features) = max(features, 0)
+$$
+神经网络使用误差逆传播算法进行训练，优化算法使用初始学习率为0.05的 Adagrad 算法。
+Adagrad 算法能够在训练中自动对学习率进行调整。
+损失计算采用的softmax cross entropy。
+
+假如分类数是$c$，softmax层的输入是一个$c \times 1$的向量，输出也是一个$c \times 1$的向量，
+表示当前输入的标签是各个类别的概率。
+记原始的输入向量是$(a_1, a_2, ..., a_c)$，softmax层的输出是
+$(S_1, S_2, ..., S_c)$，则有
+$$
+S_j = \frac{e^{a_j}}{\sum_{k=1}^c{e^{a_k}}}
+$$
+以softmax层的输出计算softmax cross enptropy：
+$$
+E = -\sum_{j = 1}^{c}{y_jlog(S_j)}
+$$
+其中$y_j$是输入对应的真实的标签。
 
 \subsubsection{决策树模型}
 
-决策树使用scikit-learn中的决策树DecisionTreeClassfier。
+决策树使用scikit-learn\footnote{\url{http://scikit-learn.org/}}中的决策树DecisionTreeClassfier。
 
 \section{收集频谱信息}
 
@@ -320,9 +345,9 @@ private void testSomething() {
 于是对预测出谓词的静态分析，只留下一定无副作用的谓词。
 比如除了部分指定函数（如size），含有其他函数的谓词都会被过滤掉。
 
-\subsection{插入预测的谓词}
-
 插入谓词仍然使用JDT。
+
+\subsection{插入预测的谓词}
 
 通过机器学习模型，每个语句可能会关联一组谓词。
 这些谓词会被机器学习模型赋予出现的概率。
