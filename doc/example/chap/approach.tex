@@ -1,6 +1,7 @@
 \chapter{设计}
 
 \section{结合基于频谱的缺陷定位和基于状态覆盖的缺陷定位}
+\label{sec:approach_comb}
 
 既然基于频谱的缺陷定位和基于状态覆盖的缺陷定位各有优劣，
 那么是否可以结合这两种缺陷定位的方法呢？
@@ -38,8 +39,25 @@
 这其实是基于频谱的缺陷定位解决的问题了，那就是使用怀疑度公式。
 使用Ochiai怀疑度公式去计算表\ref{math_2_return}中谓词的怀疑度，得到表\ref{math_2_ochiai}。
 可见谓词1以1.0000的分数远远高于其他谓词，成为怀疑度很大的谓词。
+对于每个语句的多个谓词，采用怀疑度最高的谓词的分数作为这个语句的怀疑度。
 使用Ochiai怀疑度公式，计算Math的第二个缺陷的各个谓词怀疑度，
 错误语句排名第3（第1到4名并列），相比于基于频谱的状态覆盖第11位、统计性调试全部为0和SOBER第10的结果，有显著提升。
+
+不仅如此，这样得到的结合了基于频谱的缺陷定位和基于状态覆盖的缺陷定位的结果，
+还可以和原始的基于频谱的缺陷定位的结果相结合。
+比如Math的第二个缺陷的错误语句，其基于频谱的缺陷定位的怀疑度为0.3780，
+加上结合后的谓词怀疑度1.0000，总怀疑度为1.3780，在怀疑度列表中排名第二。
+效果好于原始的定位结果和结合后的结果。
+
+所以，本文提出两种结合基于频谱的缺陷定位和基于状态覆盖的缺陷定位的方式：
+\begin{itemize}
+\item \textbf{PREDSBFL}：
+使用基于频谱的缺陷定位公式去计算谓词的怀疑度，把谓词怀疑度映射到语句，然后根据语句怀疑度定位缺陷。
+\item \textbf{COMBSD}：
+使用基于频谱的缺陷定位公式去计算语句的怀疑度（原始的基于频谱的缺陷定位方法）得到$s_0$，
+然后和 PREDSBFL 计算得到的同一条语句的怀疑度$s_1$结合得到新的怀疑度
+$s = (1 - \alpha) \times s_{0} + \alpha \times s_{1}$。
+\end{itemize}
 
 \begin{table}
 \centering
@@ -99,6 +117,10 @@ public Vector3D intersection(final SubLine subLine, final boolean includeEndPoin
 所以从它们自己的代码中来学习出谓词是更有效的方法。
 
 \section{缺陷定位框架}
+\label{sec:fl_frame}
+
+本文提出了结合了基于频谱的缺陷定位和基于状态覆盖的缺陷定位的缺陷定位方法PREDSBFL和COMBSD，
+同时还提出了一种机器学习方法去预测谓词。
 
 本文的缺陷定位框架主要包括以下几步
 \begin{itemize}
@@ -125,6 +147,7 @@ public Vector3D intersection(final SubLine subLine, final boolean includeEndPoin
 谓词的真（或假）分支在一个失败（或通过）的测试用例中被覆盖的次数等等。
 \item \textbf{计算怀疑度}
 根据上一步收集的谓词覆盖情况，带入基于频谱的缺陷定位和基于状态覆盖的缺陷定位的怀疑度公式计算怀疑度。
+收集语句的覆盖情况，带入怀疑度公式计算怀疑度，并且与谓词怀疑度结合。
 \end{itemize}
 
 \section{基于机器学习的预测谓词模型}
@@ -132,7 +155,7 @@ public Vector3D intersection(final SubLine subLine, final boolean includeEndPoin
 对谓词的预测分为三步：
 \begin{itemize}
 \item 第一步，使用VAR模型预测语句中的某个变量出现在谓词中的概率$P_{var}$。
-\item 第二步，使用EXPR模型预测语句中的某个变量会出现在谓词$pred_i$中的概率$P_{pred_i}$。
+\item 第二步，使用EXPR模型预测语句中的某个变量会出现在谓词 $pred_i$ 中的概率 $P_{pred_i}$ 。
 \item 第三步，将谓词按照$P_{var} \times P_{pred_i}$排序。
 \end{itemize}
 
@@ -140,7 +163,58 @@ public Vector3D intersection(final SubLine subLine, final boolean includeEndPoin
 
 \subsection{机器学习特征}
 
-对于一个有缺陷的代码，我们从当前这个版本的所有源代码中提取特征。\todo{现在提取的特征的说明}
+对于一个有缺陷的代码，我们从当前这个版本的所有源代码中提取特征。
+
+使用的变量特征和谓词特征如表\ref{var_feature}。
+不同的是VAR模型的标签是这个变量是否出现在条件中，
+EXPR模型的标签是这个变量相关的谓词是什么。
+也就是说VAR模型使用的样本来自于所有变量，而EXPR模型使用的样本仅来自于出现在谓词中的变量。
+
+这些特征有的是认为这些特征相似度更高的变量更可能会有相似的属性。
+相似的文件名，函数名可能是实现着相似的功能，比如可能是继承了同一个父类的子类。
+变量名相似也可能是有相似的功能，比如\mycode{len}和\mycode{length}。
+类型相同同理，比如对一个\mycode{Object}类型的变量进行是否为空指针的判断。
+相似的功能可能就会使用相似的谓词。
+还有特征是描述这个变量的上下文信息，这些特征也会影响谓词。
+比如 LastAssign 说明了这个变量值是如何得到的，比如从\mycode{getMin()}函数得到的值\mycode{v}容易出现在谓词中，并且谓词
+很可能是\mycode{v < 0}这样的比较。
+有的特征直接描述这个变量在条件表达式中的情况，比如 InFor， InCondNum等。
+
+
+\begin{table}
+\centering
+\begin{tabular}{|l|l|}
+\hline
+特征名称 & 特征说明 \\
+\hline
+FileName & 文件名 \\
+\hline
+MethodName & 函数名 \\
+\hline
+VarName & 变量名 \\
+\hline
+VarType & 变量类型 \\
+\hline
+LastAssign & 变量最后一次赋值的操作 \\
+\hline
+Dis0 & 变量声明和使用之间的距离 \\
+\hline
+PreAssNum & 变量此前赋值的次数 \\
+\hline
+IsParam & 变量是否是方法的参数 \\
+\hline
+InFor & 变量是否出现在循环中 \\
+\hline
+InCondNum & 变量在条件中出现的次数 \\
+\hline
+BodyUse & 变量在条件语句的语句体里的使用情况 \\
+\hline
+OutUse & 变量在条件外的使用方式 \\
+\hline
+\end{tabular}
+\caption{VAR模型和EXPR模型特征}
+\label{var_feature}
+\end{table}
 
 \subsection{机器学习特征编码}
 
@@ -190,7 +264,7 @@ $g_{func}$和$g_{file}$是向量下标和字符串的映射。
 比如$g_{file}(57) = "Line"$的话，Line.java的向量的第57位为1，其他位为0。
 
 然后是对字符串转换后的向量进行聚类。
-聚类使用的是scikit-learn\todo{cite}的K-means聚类算法。
+聚类使用的是K-means聚类算法。
 因为不同的项目所涉及的变量名、函数名、文件名数量差别较大，不适合使用单一的某个常数作为聚类的类别数。
 所以聚类的类别数为$Unique(names) / 20$。
 其中$names$表示所有变量名或函数名或文件名，$Unique(x)$表示$x$中不重复的值的数量。
@@ -232,11 +306,7 @@ $g_{func}$和$g_{file}$是向量下标和字符串的映射。
 
 \subsubsection{神经网络模型}
 
-神经网络使用的全连接神经网络，用TensorFlow\footnote{\url{https://www.tensorflow.org/}}实现。
-TensorFlow是一个采用数据流图用于数值计算的开源软件库。
-图中的节点表示数学操作，图中的线则表示在节点间相互联系的多维数据数组。
-
-VAR模型和EXPR模型使用同样的神经网络。
+VAR模型和EXPR模型使用同样的全连接神经网络。
 这个神经网络由一个输入层，六个隐藏层，一个输出层，一个softmax层构成。
 输入层的神经元数量和特征数量一致，输出层的神经元数量和分类数量一致。
 对于VAR模型来说输出层的神经元有两个，对于EXPR模型来说输出层的神经元数量和可能的谓词数量一样。
@@ -264,7 +334,6 @@ $$
 
 \subsubsection{决策树模型}
 
-决策树使用scikit-learn\footnote{\url{http://scikit-learn.org/}}中的决策树DecisionTreeClassfier。
 决策树是一种常用的机器学习方法。顾名思义，决策树是一棵树，包含一个根节点、若干个内部节点和叶节点。
 每个叶节点对应一个决策结果，内部节点和根节点则对应于一个属性测试。
 根据节点的属性测试，样本被划分到对应的子节点中。
@@ -469,4 +538,9 @@ public static boolean logConditionCoverage(boolean condition, String trueLogInfo
 
 收集频谱信息后，就可以带入计算怀疑度。
 无论是机器学习得到的谓词，还是预定义的谓词，都使用表\ref{susp_formula}中的五种公式，以及统计性调试和SOBER总共七种公式进行计算。
+通过谓词计算得到的语句$s_i$的怀疑度记为$s_{i1}$。
+
+除了能够使用谓词计算得到怀疑度以外，利用原始的
+基于频谱的缺陷定位方法和基于状态覆盖的缺陷定位方法（SOBER除外），还可以计算得到语句的怀疑度$s_{i0}$。
+本文尝试结合这两种怀疑度，使用$s_i = (1 - \alpha) \times s_{i0} + \alpha \times s_{i1}$作为最终怀疑度。
 
