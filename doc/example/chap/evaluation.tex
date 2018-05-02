@@ -9,28 +9,27 @@
 \begin{enumerate}
 \item \textbf{当使用不同的数据收集粒度时，缺陷定位技术的效果有什么不同？} \\
 这个研究问题探索了数据收集的粒度对缺陷定位结果的影响。
-本文主要考虑两种数据收集粒度，
-第一种是谓词的数量，第二种是程序元素的大小。
-具体来说，对于谓词数量，本文考虑不同谓词数量下的语句级别的缺陷定位效果的不同。
-对于程序元素大小，本文考虑的是语句级别和方法级别的数据收集对缺陷定位效果的影响。
+最近研究使用的方法级别的缺陷定位从两个维度收集数据：
+语句级别和方法级别。
+但是没有现有方法探究了数据收集粒度对缺陷定位结果的影响。
+因为从不同的粒度收集数据会导致谓词数量的不同，
+而谓词数量对执行时间影响程度也不清楚。
 \item \textbf{不同的怀疑度计算公式会如何影响缺陷定位的结果？} \\
 这个研究问题探索了缺陷定位公式的重要性，
 并分析了是否还能通过改进缺陷定位公式去提升缺陷定位效果，
 为后续研究提供了参考。
 \item \textbf{缺陷定位技术的不同结合方式效果如何？} \\
 在章\ref{sec:approach_comb}中，
-本文探讨了 PREDSBFL 和COMBSD 两种结合缺陷定位技术的方法，
-并且每种结合方法还有多种不同的结合方式。
+本文探讨了结合缺陷定位技术的方法。
 这个研究问题研究了不同结合方式的效果。
-\item \textbf{结合后的缺陷定位技术与现有技术相比，效果如何？} \\
-在这个研究问题中，
-本文提出的结合的缺陷定位技术将与现有技术进行比较，并对其结果进行分析。
 \item \textbf{机器学习模型预测谓词的准确率如何？} \\
 这个研究问题探索了谓词预测模型的准确率，
 并且在不同的机器学习模型上进行了对比。
-\item \textbf{机器学习模型预测的谓词能否帮助有效定位缺陷？} \\
+\item \textbf{哪种谓词能够更好地帮助定位？} \\
 这个研究问题比较了基于谓词预测的缺陷定位和本文提出的结合方法、现有方法之间的结果，
-分析预测的谓词在定位缺陷中的作用和不足。
+分析谓词在定位缺陷中的作用和不足。
+\item \textbf{和现有很多缺陷定位方法相比，本文的方法效果如何？} \\
+
 \end{enumerate}
 
 \section{实验数据}
@@ -143,11 +142,299 @@ $$
 \mathrm{F1} = \frac{2 \times \mathrm{Precision} \times \mathrm{Recall}}{\mathrm{Precision} + \mathrm{Recall}}
 $$。
 
-在本文的问题中，VAR模型是一个二分类模型，可以使用准确率、查准率、召回率和F1评判。
-EXPR模型是一个多分类模型，而且分类数量往往是四位数，使用查准率和召回率会导致查准率和召回率数量非常大
-（其数量和分类数量一致）。
-所以本文对VAR模型使用准确率、查准率、召回率和F1标准，
-而对EXPR模型只使用准确率标准。
+对于二分类问题来说，正例负例就是二分类的两个类别。
+但是对于多分类来说，每个类都可以是正例，这时其余类别就是负例。
+所以多分类问题的查准率，查全率和 F1 的对数和分类的类别数量一致。
+如果分类的类别数量非常多，观察庞大的查准率、查全率和 F1 并不能直观地描述预测结果，
+需要将各个分类的查准率、查全率和 F1 结合起来。
+$TP_i,FN_i,FP_i,TN_i$表示多分类问题下，分类$i$的真正例、假反例、假正例和真反例的数目。
+分类数记为$C$，$c_i$表示分类为$i$的样本数量。
+多分类问题的查准率、查全率和 F1 有以下几种结合方式：
+\begin{itemize}
+\item \textbf{micro}：\\
+先在全局的角度计算真正例、假反例和假正例的个数，然后带入公式计算查准率、查全率和 F1。
+以查准率为例：
+$$
+\mathrm{Precision} = \frac{\sum_{i=1}^C{TP_i}}{\sum_{i=1}^C{TP_i + FP_i}}
+$$。
+\item \textbf{macro}：\\
+先收集每个分类的真正例、假反例和假正例的个数，带入公式计算每个分类的查准率、查全率和 F1，最后求均值。
+这个不会考虑标签的不均衡。
+以查准率为例：
+$$
+\mathrm{Precision_i} = \frac{TP_i}{TP_i + FP_i}
+$$
+$$
+\mathrm{Precision} = \frac{1}{C}\sum_{i=1}^c{\mathrm{Precision_i}}
+$$。
+\item \textbf{weighted}：\\
+先收集每个分类的真正例、假反例和假正例的个数，带入公式计算每个分类的查准率、查全率和 F1，最后根据
+分类的支持度（该分类的样本在总样本中所占的数目）分配权重求均值。
+这个算法与 macro 相比，考虑了标签的不均衡性。
+以查准率为例：
+$$
+\mathrm{Precision_i} = \frac{TP_i}{TP_i + FP_i}
+$$
+$$
+\mathrm{Precision} = \sum_{i=1}^c{\frac{c_i}{C}\mathrm{Precision_i}}
+$$。
+\end{itemize}
+
+\section{实验设置}
+
+\subsection{数据收集粒度}
+
+本文考虑两种数据收集粒度：语句级别和函数级别。
+因为本文关注于函数的缺陷定位，所以对于函数级别的数据收集，
+只需要直接在函数的出入口收集就可以。
+而对于语句级别的数据收集，则需要取一个函数内所有语句的最大怀疑度值作为这个函数的怀疑度。
+本文默认配置使用语句级别的数据收集。
+
+\subsection{怀疑度公式}
+\label{sec:exp_all_formula}
+
+怀疑度的公式上，本文实现了七种怀疑度计算的公式。
+五种是经典的基于频谱的缺陷定位公式见表\ref{susp_formula}，
+两种是基于频谱的缺陷定位的公式\ref{eq:sd}和公式\ref{eq:sober} \todo{公式引用问题}。
+本文默认配置使用Ochiai作为怀疑度公式。
+
+\subsection{结合怀疑度的方法}
+
+在章\ref{sec:approach_comb}的讨论中，
+本文使用了公式
+$$
+c(s,e,r) = max_{p \in s(e)}r(p)
+$$
+计算得到了程序元素$e$的怀疑度。
+本文提出两种结合方法进行实验：
+\begin{itemize}
+\item \textbf{\textsc{MaxPred}} \\
+对于一个程序元素$e$，在某个怀疑度公式$r$和谓词$s(e)$下，
+计算得到的多个怀疑度分数，并取其最大值作为$e$的怀疑度。
+\item \textbf{\textsc{LinPred}} \\
+给定两组谓词$s_0(e)$和$s_1(e)$，使用\textsc{MaxPred}计算得到
+$e$的两个怀疑度$c_0$和$c_1$。
+再利用一个线性模型结合两个怀疑度，得到$C(e) = (1 - \alpha) \times c_0 + \alpha \times c_1$。
+\end{itemize}
+
+在本文的实验中，默认配置使用$\alpha = 0.5$的\textsc{LinPred}。
+其中，第一个怀疑度使用基于频谱的缺陷定位计算得到（$s_0(e)$产生的谓词恒为\mycode{true}），
+第二个使用基于状态覆盖的缺陷定位的谓词计算得到。
+
+\subsection{谓词}
+
+为了探索谓词在缺陷定位中的作用，本文把谓词分为三大类：预定义谓词、预测谓词和恒真谓词。
+对预定义谓词，又根据其定义分为三类：分支、返回和数值对。
+在本文的试验中，默认配置使用预定义谓词。
 
 \section{实验结果与分析}
+
+\subsection{不同数据收集粒度对比}
+
+本小节试图通过探索不同数据收集粒度对缺陷定位效果效率的影响，来回答第一个研究问题。
+对于两种不同的数据收集粒度，我们都进行了实验。
+在语句级别收集数据的方法和此前的统计性调试的方法一样。
+而在函数级别收集数据的时候，谓词的类型会有差别。
+首先是没有“分支”类型的谓词。
+然后在收集“数值对”这样的预定义谓词时，不存在对应的赋值语句，
+所以转而收集所有可以访问的类成员变量和函数参数的“数值对”。
+“数值对”类型的谓词会被插入在函数入口和出口处。
+“返回”类型的谓词会被插入在函数的出口处，如果函数有返回值的话。
+
+实验结果如图\ref{fig:ms-level-compare}所示。
+图中\textsc{LinPred}表示在语句级别收集数据，
+\textsc{LinPred-m}表示在函数级别收集数据。
+根据实验结果，我们可以发现\textsc{LinPred}的效果在
+Top-k（k=1,3,5,10）和 EXAM 分数上都优于\textsc{LinPred-m}的效果。
+具体来说，在Top-1指标上，\textsc{LinPred}相比于\textsc{LinPred-m}提升了$67.1\%$。
+
+\finding{更细粒度的数据收集会让缺陷定位效果变好。}
+
+\begin{figure}[htbp] 
+\centering 
+\includegraphics[width=12cm]{figure/ms-level-compare} 
+\caption{语句级别和函数级别数据收集的缺陷定位效果对比} 
+\label{fig:ms-level-compare}
+\end{figure}
+
+数据收集粒度变细之后，谓词数量会增多。
+为了进一步探索增加谓词之后缺陷定位的效率是否会受到影响，
+本文比较了在语句级别收集数据和在函数级别收集数据的执行时间。
+我们发现，平均来说\textsc{LinPred}的谓词数量大约是\textsc{LinPred-m}谓词数量的4.1倍，
+但是\textsc{LinPred}的执行时间只是\textsc{LinPred-m}的1.4倍。
+同时，\textsc{LinPred}的执行时间也是平均在三分钟以内。
+相比于提升数据收集粒度、降低谓词数量，在语句级别收集数据并不会严重地影响性能，同时能带来极大的效果提升。
+
+\subsection{不同的怀疑度计算公式}
+
+本小节将分析比较不同的怀疑度公式对缺陷定位结果的影响，并回答第二个研究问题。
+在章\ref{sec:exp_all_formula}中，我们使用了七个怀疑度公式。
+然而 SOBER 公式因为插装的内容较多，导致出现“code too large”的编译错误的项目较多，所以将 SOBER 公式排除。
+因此剩下五种基于频谱的缺陷定位公式和一种基于状态覆盖的缺陷定位公式。
+
+实验结果如图\ref{fig:formulas}。
+图中展示的是每个怀疑度公式的 Top-k 和 EXAM 分数。
+图中的“SD”表示的是统计性调试的结果。
+从实验结果可以看出，前五个基于频谱的缺陷定位公式并没有太大的差别，
+这和之前的研究结果一致。
+统计性调试的结果则表现不理想。
+可以发现基于频谱的缺陷定位公式的效果优于基于状态覆盖的缺陷定位公式效果。
+
+\finding{基于频谱的缺陷定位公式的效果优于基于状态覆盖的缺陷定位公式效果}
+
+\begin{figure}[htbp] 
+\centering 
+\includegraphics[width=12cm]{figure/formulas} 
+\caption{不同怀疑度公式的效果对比} 
+\label{fig:formulas}
+\end{figure}
+
+为了深入分析基于状态覆盖的缺陷定位公式效果不好的原因，
+我们手动分析了统计性调试效果不好的缺陷。
+我们发现这是由于很多缺陷都只有一个失败的测试用例，这导致一个谓词的真分支往往只被一个失败的测试用例覆盖。
+这会导致统计性调试的公式中$t_f = 1$，导致$log(t_f) = 0$，然后$\frac{log(F)}{log(t_f)} = INF$，
+于是最终计算得到的怀疑度为0。
+这样谓词本身已经失去了甄别缺陷的能力，仅仅因为测试用例的数量就导致很多谓词的怀疑度为零。
+而统计性调试在此前的实验中有效是因为此前的实验对象中一个缺项往往对应多个失败的测试用例。
+比如在Liblit\parencite{Liblit2005Scalable}的实验中，对每一个研究对象生成32000个随机输入。
+其测试用例数量远远大于 Defects4j 这样的实际项目。
+而基于频谱的缺陷定位公式却仍然能够在失败测试用例数量少的情况下得到比较靠谱的结果，
+因为它对失败测试用例数量的依赖没有基于状态覆盖的缺陷定位公式的高。
+统计性调试公式仍然有它的应用场景。
+在使用缺陷定位公式时，可以根据其应用场景选择合适的公式。
+
+\subsection{不同的结合方式}
+
+本小节将深入探讨不同的结合方式，来回答第三个研究问题。
+结合的方式被分为了两种\textsc{MaxPred}和\textsc{LinPred}。
+图\ref{fig:diff-comb-compare}展示了不同结合方式的 Top-k 和 EXAM 结果。
+“SBFL”表示传统的基于频谱的缺陷定位的结果（谓词恒为真），这里的\textsc{MaxPred}的谓词使用预定义谓词。
+
+\begin{figure}[htbp] 
+\centering 
+\includegraphics[width=12cm]{figure/diff-comb-compare} 
+\caption{不同的结合方式的对比} 
+\label{fig:diff-comb-compare}
+\end{figure}
+
+从图中可以看出，结合后的\textsc{MaxPred}和\textsc{LinPred}在 Top-1 上优于
+原始的方法。
+\textsc{LinPred}不仅获得了最好的 Top-k（k=1,3,5,10）值，还拥有最好的 EXAM 值。
+\textsc{LinPred}在 Top-1 上与传统的统计性调试比提升了208.9\%，
+与基于频谱的缺陷定位比提升了29.9\%。
+可见 SBFL 和 \textsc{MaxPred} 结合之后的\textsc{LinPred}效果非常好。
+
+图\ref{fig:diff-comb-compare}中的\textsc{LinPred}采用的默认的$\alpha = 0.5$。
+为了分析 SBFL 和 \textsc{MaxPred} 哪一种对结果的影响更大，
+采用不同的$\alpha$值进行实现，结果如图\ref{fig:coefficient}。
+
+\begin{figure}[htbp] 
+\centering 
+\includegraphics[width=12cm]{figure/coefficient} 
+\caption{\textsc{LinPred}中$\alpha$取不同值时，其 Top-k 值的变化情况} 
+\label{fig:coefficient}
+\end{figure}
+
+从图中可以看出，\textsc{LinPred}总是比原始的 SBFL 方法（$\alpha = 0$）在 Top-1 上的效果好。
+在 Top-k（k=3,5,10）上，\textsc{MaxPred}的效果一直垫底，
+可见\textsc{MaxPred}虽然能给出比较不错的分数，但是单一的\textsc{MaxPred}无法突出缺陷的语句，需要 SBFL 和它互补。
+当$\alpha$落在[0.4-0.8]之间的时候，\textsc{LinPred}的效果最好。
+不过总体上来说$\alpha$值的影响不会太大。
+
+图\ref{fig:all-figure-method-level}展示了
+\textsc{MaxPred}，\textsc{LinPred}，基于频谱的缺陷定位和基于状态覆盖的缺陷定位
+在 Defects4j 上各个项目、各个公式上 Top-1 的结果。
+可以看到\textsc{LinPred}在各个项目、各个公式上都有比较好的效果。
+
+\begin{figure}[htbp] 
+\centering 
+\includegraphics[width=15cm]{figure/all-figure-method-level} 
+\caption{\textsc{MaxPred}、\textsc{LinPred}和传统的基于频谱和基于状态覆盖的缺陷定位在各个项目、各个公式上的 Top-1 结果对比} 
+\label{fig:all-figure-method-level}
+\end{figure}
+
+\subsection{基于机器学习的谓词预测模型效果}
+
+\todo{...}
+
+\subsection{不同谓词对结果的影响}
+
+在之前的研究问题的分析中，我们已经发现了\textsc{LinPred}具有非常好的效果。
+相比于基于频谱的缺陷定位，\textsc{LinPred}利用了谓词进行进一步的状态划分。
+在本小节，我们将会深入探究谓词在缺陷定位中起的作用，来回答第五个研究问题。
+
+谓词在项目中的平均数量如表\ref{pred_number}所示。 
+Closure 因为项目较大所以谓词数量较多。
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\hline
+\multirow{2}*{谓词类型} & \multicolumn{6}{|c|}{项目} \\
+\cline{2-7}
+~ & Chart & Lang & Time & Math & Closure & 总计 \\
+\hline
+预定义谓词 & 913.6 & 119.5 & 1064.2 & 1973.0 & 2426.8 & 1662.8 \\
+\hline
+预测谓词 & - & - & - & - & - & - \\
+\hline
+恒真谓词 & 566.5 & 75.8 & 892.7 & 278.3 & 3401.3 & 1470.9 \\
+\hline
+\end{tabular}
+\caption{平均每个项目的谓词数量}
+\label{pred_number}
+\end{table}
+
+首先分析谓词对定位效果的影响。
+对于程序元素$e$，
+一个谓词被认为是对定位效果有积极的影响，如果$c_0 > c_1$且$e$是缺陷程序元素，或者$c_0 < c_1$且$e$不是缺陷程序元素。
+其中$c_0$表示使用预定义谓词的\textsc{MaxPred}的结果，
+$c_1$表示基于频谱的缺陷定位的结果（谓词恒真的\textsc{MaxPred}的结果）。
+一个谓词被认为是对定位效果有消极影响，如果$c_0 < c_1$且$e$是缺陷程序元素，或者$c_0 > c_1$且$e$不是缺陷程序元素。
+于是谓词被分为两类，这两类在不同的怀疑度计算公式下的分布情况如图\ref{fig:improve-deteriorate}。
+可以发现大部分谓词还是对结果有积极影响的，只有少部分会对结果产生不好的影响。
+
+\todo{机器学习预测的谓词}
+\todo{不同类别的谓词}
+
+\begin{figure}[htbp] 
+\centering 
+\includegraphics[width=12cm]{figure/improve-deteriorate} 
+\caption{预定义谓词在缺陷定位中的作用} 
+\label{fig:improve-deteriorate}
+\end{figure}
+
+为了探索是三种预定义谓词中的哪种谓词起了关键作用，
+我们把三种预定义谓词分别作为谓词集合，进行实验。
+实验结果如图\ref{fig:diff-predictor-compare}所示。
+\textsc{LinBrn}表示只使用分支谓词，
+\textsc{LinRet}表示只使用返回值谓词，
+\textsc{LinSca}表示只使用数值对谓词。
+可以发现，\textsc{LinBrn}拥有比\textsc{LinRet}和\textsc{LinSca}更好的 Top-k（k=1,3,5,10）和 EXAM 值。
+所以分支谓词的效果最明显。
+\textsc{LinBrn}在 Top-1 上的效果比基于频谱的缺陷定位效果还要好，
+不过基于频谱的缺陷定位在其他 Top-k 上效果更好，说明了二者的互补性。
+
+\finding{在预定义谓词中，分支谓词对\textsc{LinPred}效果提升最明显。}
+
+\begin{figure}[htbp] 
+\centering 
+\includegraphics[width=12cm]{figure/diff-predictor-compare} 
+\caption{使用不同的谓词的缺陷定位效果对比} 
+\label{fig:diff-predictor-compare}
+\end{figure}
+
+为了进一步验证我们的发现，我们比较了使用三种预定义谓词的\textsc{MaxPred}和
+只使用了分支谓词的\textsc{MaxPred}（称为\textsc{MaxBranch}），
+结果如图\ref{fig:branch-compare}。
+可以发现\textsc{MaxPred}和\textsc{MaxBranch}的结果非常相近，
+虽然\textsc{MaxBranch}少了两种谓词，但是核心的分支谓词起了很大的作用。
+
+\begin{figure}[htbp] 
+\centering 
+\includegraphics[width=16cm]{figure/branch-compare} 
+\caption{使用不同的谓词的缺陷定位效果对比} 
+\label{fig:branch-compare}
+\end{figure}
 

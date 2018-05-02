@@ -9,7 +9,7 @@
 谓词生成模块，频谱信息收集模块，和怀疑度计算模块。
 \begin{figure}[htbp] 
 \centering 
-\includegraphics[width=5cm]{frame1} 
+\includegraphics[width=5cm]{figure/frame1} 
 \caption{缺陷定位框架模块图} 
 \label{fl_frame1}
 \end{figure}
@@ -22,7 +22,7 @@
 
 \begin{figure}[htbp] 
 \centering 
-\includegraphics[width=13cm]{frame2} 
+\includegraphics[width=13cm]{figure/frame2} 
 \caption{缺陷定位整体流程图}
 \label{fl_frame2}
 \end{figure}
@@ -53,11 +53,47 @@ TensorFlow 是一个采用数据流图用于数值计算的开源软件库。
 使用这个函数的好处是，输入不需要在一开始的时候就被存储在内存，
 而是在需要的时候才生成一个批（batch）的数据。
 每次训练以一个批的数据为一次迭代。
-VAR模型的网络会跑100个纪元（epoch），EXPR模型的网络会跑1000个纪元。
-每一个纪元都会把整个输入数据遍历一次。
 VAR模型和EXPR模型的批尺寸（batch size）都为128。
 输入数据会被随机打乱（shuffle）。
-训练使用 \mycode{DNNClassifier} 的 \mycode{train} 方法。
+一个周期（epoch）就是把全部数据输入神经网络训练一次。
+输入数据按照$7:3$的比例分为训练集和验证集。
+训练时，会先使用训练集训练\mycode{INIT\_EPOCHS}个周期。
+这是因为训练开始时，损失变化较大。
+此后每次都再输入一个周期，并收集训练集和验证集在输入这个周期后的新模型上的损失和准确率。
+程序会收集最近的\mycode{1}到\mycode{2 * TEST\_EPOCHS}个周期的
+训练集和验证集的损失，记为$L(i, j)$。
+其中$i$表示是最近的第$i$个周期的损失，$j$为$true$的话表示是训练集的损失，为$false$表示是验证集的损失。
+然后分别计算\mycode{1}到\mycode{TEST\_EPOCHS}，\mycode{TEST\_EPOCHS + 1}到\mycode{2 * TEST\_EPOCHS}
+的训练集总损失值
+$$
+Loss_1 = \mathrm{Loss}(1, TEST\_EPOCHS, true)
+$$
+$$
+Loss_2 = \mathrm{Loss}(TEST\_EPOCHS + 1, 2 * TEST\_EPOCHS, true)
+$$
+和验证集的总损失值
+$$
+Loss_3 = \mathrm{Loss}(1, TEST\_EPOCHS, false)
+$$
+$$
+Loss_4 = \mathrm{Loss}(TEST\_EPOCHS + 1, 2 * TEST\_EPOCHS, false)
+$$。
+其中$\mathrm{Loss}$定义如下：
+$$
+\mathrm{Loss}(start, end, j) = \sum_{i=start}^{end}{L(i, j)}
+$$。
+终止训练的条件为
+$$
+Loss_1 < Loss_2 \ \mathrm{and} \ Loss_3 > Loss_4
+$$。
+也就是说当训练集的损失仍在下降，但是验证集的损失却开始上升时，
+说明出现了过拟合，停止训练。
+训练时会记录当前最小的验证集损失，并会把对应的模型存入磁盘。
+训练停止后，最小损失对应的模型成为最终模型。
+训练使用 \mycode{DNNClassifier} 的 \mycode{train} 方法，
+验证损失和准确率使用 \mycode{evaluate} 方法。
+神经网络使用的优化算法是 \mycode{ProximalAdagradOptimizer}，
+初始学习率设置为0.05，l2正则系数为0.0001。、
 决策树使用 scikit-learn 中的决策树 \mycode{DecisionTreeClassfier} 。
 训练使用其 \mycode{fit} 方法。
 训练好的模型被保存在磁盘中。
@@ -87,6 +123,7 @@ VAR模型会输出这个变量出现在谓词中的概率，EXPR模型会对一�
 神经网络的准确率计算使用 \mycode{DNNClassifier} 自带的 \mycode{evaluate} 方法
 的域 \mycode{accuracy} 获得。
 决策树的准确率使用 \mycode{DecisionTreeClassfier} 自带的 \mycode{score} 方法获得。
+而两者的其他评估数值由 scikit-learn 提供的计算接口获得。
 
 过滤阶段，过滤掉预测出不合法或有副作用的谓词。
 使用JDT遍历谓词过滤。

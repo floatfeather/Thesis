@@ -201,7 +201,7 @@ $P$ & 通过的测试用例执行的次数 \\
 
 通过预定义谓词被测试用例的覆盖情况，计算得到每个谓词对应的怀疑度：
 $$
-\mathrm{StatisticalDebugging}(s) = \frac{2}{\frac{1}{\frac{t_f}{t_f + t_p} - \frac{a_f}{a_f + a_p}} + \frac{log(F)}{log(t_f)}}
+\mathrm{StatisticalDebugging}(s) = \frac{2}{\frac{1}{\frac{t_f}{t_f + t_p} - \frac{a_f}{a_f + a_p}} + \frac{log(F)}{log(t_f)}}\label{eq:sd}
 $$
 
 当把统计性调试应用到Defects4j数据集中Math的第二个缺陷时，会在出错的代码处增加谓词，因为出错的代码处刚好是一个返回。
@@ -290,7 +290,7 @@ $$
 其中$\varphi(Z)$是$N(0,1)$的概率密度函数。
 最后得到怀疑度计算公式：
 $$
-\mathrm{Sober}(s) = log\left( \frac{\sigma_p}{\sqrt{m}\varphi(Z)} \right)
+\mathrm{Sober}(s) = log\left( \frac{\sigma_p}{\sqrt{m}\varphi(Z)} \right)\label{eq:sober}
 $$
 
 从SOBER的公式可以看出，SOBER仍然是建立在有大量测试用例的基础上。

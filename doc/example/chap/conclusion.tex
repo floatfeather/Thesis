@@ -1,7 +1,27 @@
-% Copyright (c) 2014,2016 Casper Ti. Vector
-% Public domain.
+\chapter{总结与未来工作}
 
-\specialchap{结论}
-% \pkuthssffaq % 中文测试文字。
+本章对本文的工作进行总结，并且对未来的研究方向进行展望。
 
-% vim:ts=4:sw=4
+\section{总结}
+
+本文结合了现有的缺陷定位技术，提出了结合现有缺陷定位技术的新的缺陷定位技术。
+具体来说，
+\begin{enumerate}
+\item 本文提出了一种结合基于频谱的缺陷定位和基于状态覆盖的缺陷定位的方法\textsc{LinPred}，
+并且在实际数据集 Defects4j 中与传统的基于频谱的缺陷定位和基于状态覆盖的缺陷定位进行了比较。
+深入分析了基于频谱的缺陷定位和基于状态覆盖的缺陷定位起作用的原因，并且将其互补地结合起来。
+可以发现\textsc{LinPred}在各个项目、各个公式上都有比较好的效果。
+\item 本文提出了一种基于机器学习的预测谓词模型，来替代基于装填覆盖的缺陷定位中的预定义谓词。 \todo{...}
+\end{enumerate}
+
+本文发现，在\textsc{LinPred}方法下：
+\begin{enumerate}
+\item 更细粒度的数据收集会让缺陷定位效果变好。
+\item 在Defects4j数据集中基于频谱的缺陷定位公式的效果优于基于状态覆盖的缺陷定位公式效果。
+\item 在预定义谓词中，分支谓词对\textsc{LinPred}效果提升最明显。
+本质上与使用分支覆盖的基于频谱的缺陷定位技术相同。
+\end{enumerate}
+
+\section{未来工作}
+
+

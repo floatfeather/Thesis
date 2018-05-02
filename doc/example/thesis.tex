@@ -78,6 +78,17 @@
     breaklines
 } 
 
+\newcounter{finding}
+\newcommand{\finding}[1]{\refstepcounter{finding}
+    \vspace{3.0pt}
+    \fbox{
+        \parbox{0.9\columnwidth}{
+            \textbf{发现 \arabic{finding}. } \emph{#1}
+        }
+    }
+    \vspace{3.0pt}
+}
+
 \begin{document}
 	% 以下为正文之前的部分，默认不进行章节编号。
 	\frontmatter
