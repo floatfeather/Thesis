@@ -79,7 +79,7 @@ Top-k 的召回率衡量的是有多少缺陷能够排在怀疑列表的前k位�
 所以本文采用1，3，5，10作为k值。
 对于怀疑度分数相同的程序元素，它们的排名会使用平均排名，这也是很多已有研究使用的方法\parencite{Pearson2017Evaluating,Xuan2014Learning,Steimann2013Threats,Wong2016A}。
 
-EXAM 分数衡量是开发者需要查看多少个位置才能看到真正的缺陷。
+EXAM 分数衡量的是开发者需要查看多少个位置才能看到真正的缺陷。
 $$
 \mathrm{EXAM} = \frac{n}{N}
 $$
@@ -155,7 +155,7 @@ $TP_i,FN_i,FP_i,TN_i$表示多分类问题下，分类$i$的真正例、假反�
 先在全局的角度计算真正例、假反例和假正例的个数，然后带入公式计算查准率、查全率和 F1。
 以查准率为例：
 $$
-\mathrm{Precision} = \frac{\sum_{i=1}^C{TP_i}}{\sum_{i=1}^C{TP_i + FP_i}}
+\mathrm{Precision} = \frac{\sum_{i=1}^C{TP_i}}{\sum_{i=1}^C{(TP_i + FP_i)}}
 $$。
 \item \textbf{macro}：\\
 先收集每个分类的真正例、假反例和假正例的个数，带入公式计算每个分类的查准率、查全率和 F1，最后求均值。
@@ -205,17 +205,8 @@ $$。
 $$
 c(s,e,r) = max_{p \in s(e)}r(p)
 $$
-计算得到了程序元素$e$的怀疑度。
-本文提出两种结合方法进行实验：
-\begin{itemize}
-\item \textbf{\textsc{MaxPred}} \\
-对于一个程序元素$e$，在某个怀疑度公式$r$和谓词$s(e)$下，
-计算得到的多个怀疑度分数，并取其最大值作为$e$的怀疑度。
-\item \textbf{\textsc{LinPred}} \\
-给定两组谓词$s_0(e)$和$s_1(e)$，使用\textsc{MaxPred}计算得到
-$e$的两个怀疑度$c_0$和$c_1$。
-再利用一个线性模型结合两个怀疑度，得到$C(e) = (1 - \alpha) \times c_0 + \alpha \times c_1$。
-\end{itemize}
+计算得到了程序元素$e$的怀疑度，
+并提出了\textsc{MaxPred}和\textsc{LinPred}两种结合方式。
 
 在本文的实验中，默认配置使用$\alpha = 0.5$的\textsc{LinPred}。
 其中，第一个怀疑度使用基于频谱的缺陷定位计算得到（$s_0(e)$产生的谓词恒为\mycode{true}），
@@ -396,7 +387,6 @@ $c_1$表示基于频谱的缺陷定位的结果（谓词恒真的\textsc{MaxPred
 可以发现大部分谓词还是对结果有积极影响的，只有少部分会对结果产生不好的影响。
 
 \todo{机器学习预测的谓词}
-\todo{不同类别的谓词}
 
 \begin{figure}[htbp] 
 \centering 

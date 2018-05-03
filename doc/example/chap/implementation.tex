@@ -66,19 +66,20 @@ VAR模型和EXPR模型的批尺寸（batch size）都为128。
 然后分别计算\mycode{1}到\mycode{TEST\_EPOCHS}，\mycode{TEST\_EPOCHS + 1}到\mycode{2 * TEST\_EPOCHS}
 的训练集总损失值
 $$
-Loss_1 = \mathrm{Loss}(1, TEST\_EPOCHS, true)
+Loss_1 = \mathrm{Loss}(1, TE, true)
 $$
 $$
-Loss_2 = \mathrm{Loss}(TEST\_EPOCHS + 1, 2 * TEST\_EPOCHS, true)
+Loss_2 = \mathrm{Loss}(TE + 1, 2 * TE, true)
 $$
 和验证集的总损失值
 $$
-Loss_3 = \mathrm{Loss}(1, TEST\_EPOCHS, false)
+Loss_3 = \mathrm{Loss}(1, TE, false)
 $$
 $$
-Loss_4 = \mathrm{Loss}(TEST\_EPOCHS + 1, 2 * TEST\_EPOCHS, false)
+Loss_4 = \mathrm{Loss}(TE + 1, 2 * TE, false)
 $$。
-其中$\mathrm{Loss}$定义如下：
+其中$TE$表示\mycode{TEST\_EPOCHS}，
+$\mathrm{Loss}$定义如下：
 $$
 \mathrm{Loss}(start, end, j) = \sum_{i=start}^{end}{L(i, j)}
 $$。
@@ -88,12 +89,26 @@ Loss_1 < Loss_2 \ \mathrm{and} \ Loss_3 > Loss_4
 $$。
 也就是说当训练集的损失仍在下降，但是验证集的损失却开始上升时，
 说明出现了过拟合，停止训练。
+实现上会使用四个大小为\mycode{TEST\_EPOCHS}的队列，两个存放训练集损失，两个存放验证集损失。
+比如对训练集来说，
+一个存放\mycode{1}到\mycode{TEST\_EPOCHS}的数据，称为队列1。
+一个存放\mycode{TEST\_EPOCHS + 1}到\mycode{2 * TEST\_EPOCHS}，称为队列2。
+每新训练完一个周期，得到当前的损失$l_0$，
+再从队列1中弹出一个数据$l_1$，从队列2中弹出一个数据$l_2$。
+于是，把$l_0$加入队列1中，并更新$Loss_1$：
+$$
+Loss_1 = Loss_1 - l_1 + l_0
+$$。
+把$l_1$加入加入队列2中，并更新$Loss_2$：
+$$
+Loss_2 = Loss_2 - l_2 + l_1
+$$。
 训练时会记录当前最小的验证集损失，并会把对应的模型存入磁盘。
 训练停止后，最小损失对应的模型成为最终模型。
 训练使用 \mycode{DNNClassifier} 的 \mycode{train} 方法，
 验证损失和准确率使用 \mycode{evaluate} 方法。
 神经网络使用的优化算法是 \mycode{ProximalAdagradOptimizer}，
-初始学习率设置为0.05，l2正则系数为0.0001。、
+初始学习率设置为0.05，L2正则惩罚系数为0.0001。
 决策树使用 scikit-learn 中的决策树 \mycode{DecisionTreeClassfier} 。
 训练使用其 \mycode{fit} 方法。
 训练好的模型被保存在磁盘中。
@@ -118,8 +133,8 @@ VAR模型会输出这个变量出现在谓词中的概率，EXPR模型会对一�
 
 验证阶段是在正常的缺陷定位中不存在的阶段。
 在测试中被用于测试模型的预测准确性。
-在验证阶段，输入数据会被使用 scikit-learn 的 \mycode{train\_test\_split} 函数随机分为70\%的训练集和30\%的验证集。
-然后使用训练集去训练模型，对得到的模型使用验证集验证其准确率。
+在验证阶段，输入数据会被使用 scikit-learn 的 \mycode{train\_test\_split} 函数随机分为60\%的训练集，20\%的验证集和20\%的测试集。
+然后使用训练集和验证集去训练模型，对得到的模型使用测试集验证其准确率。
 神经网络的准确率计算使用 \mycode{DNNClassifier} 自带的 \mycode{evaluate} 方法
 的域 \mycode{accuracy} 获得。
 决策树的准确率使用 \mycode{DecisionTreeClassfier} 自带的 \mycode{score} 方法获得。
@@ -140,7 +155,7 @@ VAR模型会输出这个变量出现在谓词中的概率，EXPR模型会对一�
 
 预定义生成的谓词数量往往大于预测谓词的数量。
 过滤的时候使用编译过滤速度较慢。
-其实预定义谓词并不需要一一过滤。
+其实预定义谓词并不需要过滤。
 首先，条件语句的谓词就是其条件表达式和其条件表达式取反，这种谓词肯定是编译正确的，所以不需要过滤。
 对于返回语句来说，只要验证 \mycode{v > 0} 是否编译正确就可以知道 \mycode{v < 0} 等谓词是否编译正确。
 对于数值对来说，只要验证 \mycode{a > b} 是否编译正确就可以知道 \mycode{a < b} 等谓词是否编译正确。
@@ -161,9 +176,9 @@ VAR模型会输出这个变量出现在谓词中的概率，EXPR模型会对一�
 首先是使用 \mycode{VariableDeclarationFragment} 新建一个变量，这个变量的变量名组成为
 \mycode{"automatic\_" + lineNumber + "\_" + varCount}。
 其中 \mycode{lineNumber} 是行号， \mycode{varCount} 是一个递增的新变量计数。
-然后用这个 \mycode{VariableDeclarationFragment} 生成一个 \mycode{VarableDeclarationExpression} ，
+然后把这个 \mycode{VariableDeclarationFragment} 放入更高一层的 \mycode{VarableDeclarationExpression} ，
 得到 \mycode{int automatic\_11\_2}。
-把这个 \mycode{VarableDeclarationExpression} 放入 \mycode{Assignment}，得到 \mycode{int automatic\_11\_2 = a.increase();}。
+再将其放入 \mycode{Assignment}，得到 \mycode{int automatic\_11\_2 = a.increase();}。
 把原本的返回语句改为 \mycode{return automatic\_11\_2;}。
 然后谓词也要修改，
 原本要插入的谓词是 \mycode{a.increase() > 0}，
@@ -193,7 +208,8 @@ SOBER算法的每个谓词会对应若干个覆盖信息。
 子类需要实现两个函数，一个是 \mycode{getName} 返回算法名，
 一个是 \mycode{getScore} 返回怀疑度。
 父类负责从磁盘读取执行信息并处理为频谱信息，计算并结合语句的怀疑度和谓词怀疑度，根据怀疑度对语句进行排序，最后输出到磁盘。
+% 具体的结合方式根据会在
 
-在一条语句的多个谓词中，选择怀疑度最高的作为这个语句的最终谓词怀疑度。
+在一条语句的多个谓词中，选择怀疑度最高的作为这个语句的最终谓词怀疑度。结合方式有\textsc{MaxPred}和\textsc{LinPred}。
 
 

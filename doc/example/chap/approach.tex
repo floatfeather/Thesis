@@ -6,14 +6,13 @@
 既然基于频谱的缺陷定位和基于状态覆盖的缺陷定位各有优劣，
 那么是否可以结合这两种缺陷定位的方法呢？
 事实上已经有研究\parencite{Le2016A,Xuan2014Learning}，结合了多种缺陷定位方法，并且获得了比较好的结果。
-\todo{展开}。
 但是这些研究的结合方式都是在比较高的层次，
 比如使用机器学习方法对不同缺陷定位得到的结果进行组合。
 这样的结合方式会有两个缺点。
-一是他们难以解释为什么他们的方法会起作用。
+一是他们没有解释为什么他们的方法会起作用。
 二是他们没有深入理解缺陷定位方法起作用的原因，仅仅是把各个方法的结果合在一起。
 
-所以，本文试图提出一个能够结合多种缺陷定位（比如基于频谱的缺陷定位和基于状态覆盖的缺陷定位）的方法去改进缺陷定位技术，
+所以，本文试图提出一个能够结合现有缺陷定位（比如基于频谱的缺陷定位和基于状态覆盖的缺陷定位）的方法去改进缺陷定位技术，
 同时本文试图解释这个结合为什么起作用的原因。
 
 虽然在直觉上我们认为基于频谱的缺陷定位和基于状态覆盖的缺陷定位是完全不一样的。
@@ -42,12 +41,12 @@
 可见谓词1以1.0000的分数远远高于其他谓词，成为怀疑度很大的谓词。
 对于每个语句的多个谓词，采用怀疑度最高的谓词的分数作为这个语句的怀疑度。
 使用Ochiai怀疑度公式，计算Math的第二个缺陷的各个谓词怀疑度，
-错误语句排名第3（第1到4名并列），相比于基于频谱的状态覆盖第11位、统计性调试全部为0和SOBER第10的结果，有显著提升。
+缺陷语句排名第3（第1到4名并列），相比于基于频谱的状态覆盖第11位、统计性调试全部为0和SOBER第10的结果，有显著提升。
 
 不仅如此，这样得到的结合了基于频谱的缺陷定位和基于状态覆盖的缺陷定位的结果，
 还可以和原始的基于频谱的缺陷定位的结果相结合。
 比如Math的第二个缺陷的错误语句，其基于频谱的缺陷定位的怀疑度为0.3780，
-加上结合后的谓词怀疑度1.0000，总怀疑度为1.3780，在怀疑度列表中排名第二。
+加上结合后的谓词怀疑度1.0000，总怀疑度为1.3780，在怀疑度列表中排名第2。
 效果好于原始的定位结果和结合后的结果。
 
 基于频谱的缺陷定位和基于状态覆盖的缺陷定位的方法都可以表述为，
@@ -60,9 +59,20 @@ $$
 对于基于频谱的缺陷定位方法这个谓词恒为\mycode{true}。
 然后对每个谓词$p$计算其在怀疑度公式$r$下的怀疑度$r(p)$。
 这个怀疑度公式包括基于频谱的缺陷定位和基于状态覆盖的缺陷定位怀疑度公式。
-上述例子中就是使用的基于频谱的缺陷定位的$r$，和基于状态覆盖的缺陷定位的$s$。
+上述例子提出的结合的方法，使用的基于频谱的缺陷定位的$r$，和基于状态覆盖的缺陷定位的$s$。
 这样可能会得到多个怀疑度，采用某种方式把它们结合起来（这里使用的最基本的$max$函数作为结合怀疑度的方法），
 就可以得到这个程序元素的最终分数。
+
+本文提出两种结合方法进行实验：
+\begin{itemize}
+\item \textbf{\textsc{MaxPred}} \\
+对于一个程序元素$e$，在某个怀疑度公式$r$和谓词$s(e)$下，
+计算得到的多个怀疑度分数，并取其最大值作为$e$的怀疑度。
+\item \textbf{\textsc{LinPred}} \\
+给定两组谓词$s_0(e)$和$s_1(e)$，使用\textsc{MaxPred}计算得到
+$e$的两个怀疑度$c_0$和$c_1$。
+再利用一个线性模型结合两个怀疑度，得到$C(e) = (1 - \alpha) \times c_0 + \alpha \times c_1$。
+\end{itemize}
 
 % \begin{itemize}
 % \item \textbf{\textsc{MaxPRED}}：
@@ -120,7 +130,7 @@ public Vector3D intersection(final SubLine subLine, final boolean includeEndPoin
 }
 \end{lstlisting}
 
-第4，5，6行是修复缺陷的代码。这个的缺陷是缺少了对变量\mycode{v1D}是否是空的判断。
+第4，5，6行是修复缺陷的代码。这个缺陷是缺少了对变量\mycode{v1D}是否是空的判断。
 考虑谓词\mycode{v1D == null}，会发现通过的测试用例都不会覆盖这个谓词，只有失败的测试用例覆盖这个谓词。
 因为一旦这个谓词为真，那么后续某些使用这个\mycode{v1D}变量的操作就会造成空指针的错误。
 
@@ -188,9 +198,9 @@ EXPR模型的标签是这个变量相关的谓词是什么。
 也就是说VAR模型使用的样本来自于所有变量，而EXPR模型使用的样本仅来自于出现在谓词中的变量。
 
 这些特征有的是认为这些特征相似度更高的变量更可能会有相似的属性。
-相似的文件名，函数名可能是实现着相似的功能，比如可能是继承了同一个父类的子类。
-变量名相似也可能是有相似的功能，比如\mycode{len}和\mycode{length}。
-类型相同同理，比如对一个\mycode{Object}类型的变量进行是否为空指针的判断。
+相似的文件名、函数名可能是实现着相似的功能，比如可能是继承了同一个父类的子类。
+变量名相似也可能是有相似的功能，比如 \mycode{len} 和 \mycode{length}。
+类型相同同理，比如对一个 \mycode{Object} 类型的变量进行是否为空指针的判断。
 相似的功能可能就会使用相似的谓词。
 还有特征是描述这个变量的上下文信息，这些特征也会影响谓词。
 比如 LastAssign 说明了这个变量值是如何得到的，比如从\mycode{getMin()}函数得到的值\mycode{v}容易出现在谓词中，并且谓词
@@ -273,23 +283,23 @@ $f$是一个映射函数，将一个字符转换成一个0到26之间的数字�
 对于$f$有$f('a') = 0, f('b') = 1, ..., f('z') = 25$，然后a到z以外的字符都被转为26。
 这样的话len和length的特征向量之间就会有两位相同，而len和domain之间则完全没有相同的。
 对函数名和文件名，去掉后缀，然后利用Java中使用的驼峰命名法将它们按照驼峰分割开来。
-比如SubLine.java会被拆为Sub和Line，而Line.java得到Line，BracketFinder.java得到Bracket和Finder。
+比如 SubLine.java 会被拆为 Sub 和 Line，而 Line.java 得到 Line，BracketFinder.java 得到Bracket和Finder。
 收集所有分割后的词（函数名和文件名分开收集），假设有$N_{func}$和$N_{file}$个，
 则每个函数名（或文件名）就转成一个长度为$N_{func}$（或$N_{file}$）的向量。
 这个向量的第i位为1表示函数名（或文件名）中含有字符串$g_{func}(i)$（$g_{file}(i)$）。
 $g_{func}$和$g_{file}$是向量下标和字符串的映射。
-比如$g_{file}(57) = "Line"$的话，Line.java的向量的第57位为1，其他位为0。
+比如 $g_{file}(57) = "Line"$ 的话，Line.java的向量的第57位为1，其他位为0。
 
 然后是对字符串转换后的向量进行聚类。
 聚类使用的是K-means聚类算法。
 因为不同的项目所涉及的变量名、函数名、文件名数量差别较大，不适合使用单一的某个常数作为聚类的类别数。
-所以聚类的类别数为$Unique(names) / 20$。
-其中$names$表示所有变量名或函数名或文件名，$Unique(x)$表示$x$中不重复的值的数量。
+所以聚类的类别数为$Unique(names) / c$。
+其中$names$表示所有变量名或函数名或文件名，$Unique(x)$表示$x$中不重复的值的数量，$c$是某个常数。
 
 最后是根据聚类给字符串编码。
-加入聚类结果有$N$个类，那么就把这$N$个类编号为$1$到$N$。
+假如聚类结果有$N$个类，那么就把这$N$个类编号为$1$到$N$。
 每个类中的每个字符串的编号等于它所处的类的编号。
-每个字符创的编号就是它的特征值，对这个特征值使用独热编码就得到最终的特征。
+每个字符串的编号就是它的特征值，对这个特征值使用独热编码就得到最终的特征。
 于是通过重新编码和聚类，字符串特征的内部特征被抽取出来，并且字符串特征的维度也被大幅减小。
 
 \subsubsection{预测时的特征新值}
@@ -379,7 +389,7 @@ $$
 \section{收集频谱信息}
 
 代码插装是一种常用的记录程序执行情况、修改程序的方法。
-采用的工具是eclipse提供的Java Development Tool\footnote{\url{http://www.eclipse.org/jdt/}}，简称JDT。
+采用的工具是 eclipse 提供的Java Development Tool\footnote{\url{http://www.eclipse.org/jdt/}}，简称JDT。
 JDT不仅可以构造给定Java代码的抽象语法树，还可以新建、修改、插入、删除抽象语法树从而新建、修改、插入、删除Java代码。
 本章中很多实现都依赖于JDT。
 
@@ -388,9 +398,9 @@ JDT不仅可以构造给定Java代码的抽象语法树，还可以新建、修�
 这个打印语句会打印出当前的文件名和对应语句的行数。
 用失败的测试用例执行这个插装后的程序，就可以得到失败测试用例覆盖的语句。
 
-对于谓词$P$和一个测试用例$T_i$，可能需要收集种信息：
+对于谓词$P$和一个测试用例$T_i$，可能需要收集四种信息：
 \begin{enumerate}
-\item $P$是否被$T$观察过（无论是真还是假）。
+\item $P$是否被$T_i$观察过（无论是真还是假）。
 \item $T_i$中$P$是否至少一次为真。
 \item $T_i$中$P$为真的次数。
 \item $T_i$中$P$为假的次数。
@@ -424,13 +434,13 @@ if (predicate) {
 \mycode{SpecLogger.coverTrueBranch}记录这个谓词为真的次数（信息3），
 \mycode{SpecLogger.coverFalseBranch}记录这个谓词为假的次数（信息4）。
 
-这几个$SpecLogger$的函数可以是把自己内部的某个布尔型的成员变量置为真或假，
+这几个\mycode{SpecLogger}的函数可以是把自己内部的某个布尔型的成员变量置为真或假，
 也可以是把自己内部的某个整型的成员变量加一。
-这个$SpecLogger$对象在每个测试用例开始的时候重置（使用静态方法变量），并在测试用例结束的时候以某种格式将自己记录的信息输出到文件。
+这个\mycode{SpecLogger}对象在每个测试用例开始的时候重置（使用静态方法变量），并在测试用例结束的时候以某种格式将自己记录的信息输出到文件。
 \lstset{language=Java}
 \begin{lstlisting}
 private void testSomething() {
-	SpecLogger.reset();
+    SpecLogger.reset();
     SpecLogger.testStatus = true;
 
     // test ...
@@ -476,7 +486,6 @@ private void testSomething() {
 \begin{itemize}
 \item 含有数组访问\mycode{v[i]}且\mycode{v}并不是数组类型。
 \item 含有变量访问\mycode{v.a}且\mycode{v}是一个基本数据类型（比如\mycode{int}）的变量。
-\todo{bug fix}
 \item 含有变量访问\mycode{a.v}且\mycode{v}不是\mycode{a}的一个域。
 \item \todo{simple name}
 \item 含有函数调用\mycode{v.a()}且\mycode{v}是一个基本数据类型变量。
@@ -500,9 +509,11 @@ private void testSomething() {
 我们再加入取反的谓词${!P_1, !P_2, ...}$。
 
 然后就是将收集谓词频谱信息的代码插入到语句前或后。
-语句前后都插入的有\mycode{WhileStatement，ForStatement，DoStatement，EnhancedForStatement}，
-插入在语句后面的有\mycode{Assignment，VariableDeclarationStatement, ConstructorInvocation, SuperConstructorInvocation}，
-插入在语句前的有\mycode{IfStatement，SwitchStatement}等其他所有语句。
+语句前后都插入的有\mycode{while，for，do}，
+插入在语句后面的有赋值语句，
+插入在语句前的有\mycode{if，switch}等其他所有语句。
+
+%\mycode{Assignment，VariableDeclarationStatement, ConstructorInvocation, SuperConstructorInvocation}，
 
 \subsection{插入预定义的谓词}
 
@@ -523,7 +534,7 @@ if (temp > d) {
 分支的谓词是分支中含有的条件表达式。
 \mycode{DoStatement}中的条件表达式的值每次循环都会更新，再考虑上\mycode{continue}这样的语句，
 会让条件表达式的更新逻辑非常复杂。
-为了简单地插入谓词，使用一个函数\mycode{logConditionCoverage}替换条件表达式。
+为了简单地插入谓词，并且由于条件表达式的类型都是布尔型，使用一个函数\mycode{logConditionCoverage}替换条件表达式。
 原代码为：
 \lstset{language=Java}
 \begin{lstlisting}
@@ -566,5 +577,5 @@ public static boolean logConditionCoverage(boolean condition, String trueLogInfo
 
 除了能够使用谓词计算得到怀疑度以外，利用原始的
 基于频谱的缺陷定位方法和基于状态覆盖的缺陷定位方法（SOBER除外），还可以计算得到语句的怀疑度$s_{i0}$。
-本文尝试结合这两种怀疑度，使用$s_i = (1 - \alpha) \times s_{i0} + \alpha \times s_{i1}$作为最终怀疑度。
+本文尝试结合这两种怀疑度，比如使用$s_i = (1 - \alpha) \times s_{i0} + \alpha \times s_{i1}$作为最终怀疑度。
 
