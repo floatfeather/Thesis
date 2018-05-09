@@ -28,7 +28,7 @@
 \item \textbf{哪种谓词能够更好地帮助定位？} \\
 这个研究问题比较了基于谓词预测的缺陷定位和本文提出的结合方法、现有方法之间的结果，
 分析谓词在定位缺陷中的作用和不足。
-\item \textbf{和现有很多缺陷定位方法相比，本文的方法效果如何？} \\
+% \item \textbf{和现有很多缺陷定位方法相比，本文的方法效果如何？} \\
 
 \end{enumerate}
 
@@ -488,6 +488,15 @@ Closure 因为项目较大所以谓词数量较多。
 \label{pred_number}
 \end{table}
 
+\subsubsection{预定义谓词}
+
+\begin{figure}[tbp] 
+\centering 
+\includegraphics[width=12cm]{figure/improve-deteriorate} 
+\caption{预定义谓词在缺陷定位中的作用} 
+\label{fig:improve-deteriorate}
+\end{figure}
+
 首先分析谓词对定位效果的影响。
 对于程序元素$e$，
 一个谓词被认为是对定位效果有积极的影响，如果$c_0 > c_1$且$e$是缺陷程序元素，或者$c_0 < c_1$且$e$不是缺陷程序元素。
@@ -496,15 +505,6 @@ $c_1$表示基于频谱的缺陷定位的结果（谓词恒真的\textsc{MaxPred
 一个谓词被认为是对定位效果有消极影响，如果$c_0 < c_1$且$e$是缺陷程序元素，或者$c_0 > c_1$且$e$不是缺陷程序元素。
 于是谓词被分为两类，这两类在不同的怀疑度计算公式下的分布情况如图\ref{fig:improve-deteriorate}。
 可以发现大部分谓词还是对结果有积极影响的，只有少部分会对结果产生不好的影响。
-
-\todo{机器学习预测的谓词}
-
-\begin{figure}[htbp] 
-\centering 
-\includegraphics[width=12cm]{figure/improve-deteriorate} 
-\caption{预定义谓词在缺陷定位中的作用} 
-\label{fig:improve-deteriorate}
-\end{figure}
 
 为了探索是三种预定义谓词中的哪种谓词起了关键作用，
 我们把三种预定义谓词分别作为谓词集合，进行实验。
@@ -522,7 +522,7 @@ $c_1$表示基于频谱的缺陷定位的结果（谓词恒真的\textsc{MaxPred
 \begin{figure}[htbp] 
 \centering 
 \includegraphics[width=12cm]{figure/diff-predictor-compare} 
-\caption{使用不同的谓词的缺陷定位效果对比} 
+\caption{使用不同的预定义谓词的缺陷定位效果对比} 
 \label{fig:diff-predictor-compare}
 \end{figure}
 
@@ -535,7 +535,29 @@ $c_1$表示基于频谱的缺陷定位的结果（谓词恒真的\textsc{MaxPred
 \begin{figure}[htbp] 
 \centering 
 \includegraphics[width=16cm]{figure/branch-compare} 
-\caption{使用不同的谓词的缺陷定位效果对比} 
+\caption{分支谓词和全部预定义谓词的缺陷定位效果对比} 
 \label{fig:branch-compare}
+\end{figure}
+
+\subsubsection{预测谓词}
+
+把决策树模型和神经网络模型预测出的谓词，与预定义谓词和恒真谓词比较，
+得到图\ref{fig:diff-ml-pred-compare}。
+
+\textsc{LinTree}表示使用决策树模型预测的谓词，
+\textsc{LinDnn}表示使用神经网络模型预测的谓词。
+从Top-1和Top-3指标上看，\textsc{LinPred}的效果最好。
+可见预定义的谓词在把缺陷定位在最前面具有很大优势。
+而从EXAM指标上看，\textsc{LinTree}的效果最好。
+虽然决策树模型预测出的谓词在把缺陷排在最前面的效果不如预定义谓词，
+但是在整体上决策树模型预测出的谓词能够把缺陷排在更加考前的位置。
+
+\todo{正负性比较}
+
+\begin{figure}[htbp] 
+\centering 
+\includegraphics[width=10cm]{figure/diff-ml-pred-compare} 
+\caption{预测谓词和预定义谓词的缺陷定位效果对比} 
+\label{fig:diff-ml-pred-compare}
 \end{figure}
 
