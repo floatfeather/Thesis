@@ -431,8 +431,8 @@ if (predicate) {
     SpecLogger.coverFalseBranch(predicateSignature);
 }
 \end{lstlisting}
-\mycode{SpecLogger.coverTrueBranch}记录这个谓词为真的次数（信息3），
-\mycode{SpecLogger.coverFalseBranch}记录这个谓词为假的次数（信息4）。
+\mycode{coverTrueBranch}记录这个谓词为真的次数（信息3），
+\mycode{coverFalseBranch}记录这个谓词为假的次数（信息4）。
 
 这几个\mycode{SpecLogger}的函数可以是把自己内部的某个布尔型的成员变量置为真或假，
 也可以是把自己内部的某个整型的成员变量加一。

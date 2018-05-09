@@ -1,6 +1,6 @@
 \chapter{相关工作}
 
-本章讲介绍自动缺陷定位、机器学习的相关工作和缺陷定位所使用的数据集以帮助更好理解本文的工作。
+本章将介绍自动缺陷定位、机器学习的相关工作和缺陷定位所使用的数据集以帮助更好理解本文的工作。
 
 \section{自动缺陷定位相关工作}
 
@@ -38,9 +38,9 @@ Weiser在1981年提出的程序切片\parencite{Weiser1981Program,Weiser1984Prog
 \subsection{基于频谱的缺陷定位}
 
 基于频谱的缺陷定位是使用最广泛的自动化缺陷定位方法\parencite{YingfeiFL}。
-程序频谱（Program Spectrum）最早由Reps等人于1997年提出\parencite{Reps1997The}，用于解决千年虫问题。
+程序频谱（~Program~ Spectrum）最早由Reps等人于1997年提出\parencite{Reps1997The}，用于解决千年虫问题。
 Harrold 等人在2002年\parencite{Harrold2000An}提出使用测试覆盖信息作为频谱信息的调试方法。
-Renieris等人在2003年提出使用通过的测试用例和失败的测试用例进行缺陷定位\parencite{Renieres2003Fault}，奠定了此后基于频谱的缺陷定位的基础。
+Renieris等人在 2003年提出使用通过的测试用例和失败的测试用例进行缺陷定位\parencite{Renieres2003Fault}，奠定了此后基于频谱的缺陷定位的基础。
 
 考虑一种极端的情况。
 比如当某一个语句$s$被执行的之后，测试用例就会失败。
@@ -236,5 +236,5 @@ Defects4j数据集\parencite{Just2014Defects4J}是一个真实、独立、可重
 它由六个Java开源项目的395个缺陷组成（2018年4月时，该数据集仍在更新当中）。
 每一个错误版本会恰好有一个缺陷。
 这个缺陷可能涉及多行甚至多个文件。
-与Siemens数据集相比，Defects4j 数据集的缺陷和测试用例都更接近实际开发情况。
+与Siemens数据集相比，~Defects4j~数据集的缺陷和测试用例都更接近实际开发情况。
 Savant\parencite{Le2016A}就是在Defects4j数据集上验证的。

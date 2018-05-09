@@ -35,7 +35,7 @@
 \section{实验数据}
 
 本文使用Defects4j数据集\parencite{Just2014Defects4J}（v1.0）作为实验对象，
-下文所提到的Defects4j都是v1.0版本。
+下文所提到的Defects4j都是 v1.0 版本。
 Defects4j数据集含有357个真实的缺陷，来自五个大型的开源软件项目，见表\ref{defects4j_details}。
 其中，“实验缺陷数目”是本文在实验中实际使用了的缺陷数目，“代码行数（千行）”表示的是这五个项目最近的版本的代码行数。
 本文只使用了330个缺陷是因为其余27个缺陷因为插装后的代码太大导致“code too large"的报错而无法运行。
@@ -197,7 +197,7 @@ $$。
 
 怀疑度的公式上，本文实现了七种怀疑度计算的公式。
 五种是经典的基于频谱的缺陷定位公式见表\ref{susp_formula}，
-两种是基于频谱的缺陷定位的公式\ref{eq:sd}和公式\ref{eq:sober} \todo{公式引用问题}。
+两种是基于频谱的缺陷定位的公式\ref{eq:sd}和公式\ref{eq:sober}。
 本文默认配置使用Ochiai作为怀疑度公式。
 
 \subsection{结合怀疑度的方法}
@@ -238,7 +238,7 @@ $$
 图中\textsc{LinPred}表示在语句级别收集数据，
 \textsc{LinPred-m}表示在函数级别收集数据。
 根据实验结果，我们可以发现\textsc{LinPred}的效果在
-Top-k（k=1,3,5,10）和 EXAM 分数上都优于\textsc{LinPred-m}的效果。
+Top-k（k=1,3,5, 10）和 EXAM 分数上都优于\textsc{LinPred-m}的效果。
 具体来说，在Top-1指标上，\textsc{LinPred}相比于\textsc{LinPred-m}提升了$67.1\%$。
 
 \finding{更细粒度的数据收集会让缺陷定位效果变好。}
@@ -351,12 +351,23 @@ Top-k（k=1,3,5,10）和 EXAM 分数上都优于\textsc{LinPred-m}的效果。
 本小节将对基于神经网络的谓词预测模型和基于决策树的谓词预测模型的预测效果进行研究，
 并回答第四个研究问题。
 
+为了考察谓词预测模型的效果，使用验证模型，
+即在章\ref{sec:gen_pred_impl}中描述的验证阶段。
+
 先考虑VAR模型。
 VAR模型的结果如表\ref{var_predict_result}所示。
+整体上来看，决策树模型的准确率、查准率、查全率和F1分数都比神经网络模型的高。
+所有项目的决策树模型的测试集准确率为86.27\%，
+神经网络模型的为82.93\%，略低于决策树模型。
+所有项目的决策树模型的测试集F1分数为86.16\%，
+神经网络模型的为82.20\%。
+各个项目决策树模型的测试集准确率在79.15\%到89.00\%之间波动，
+F1分数在78.10\%到88.25\%之间波动。
+各个项目神经网络模型的测试集准确率在83.85\%到92.75\%之间波动，
+F1分数在83.67\%到92.72\%之间波动。
+两个模型的结果比较接近，且效果均较好。
 
-
-
-\begin{table}
+\begin{table}[!tbp]
 \centering
 \begin{tabular}{|l|l|l|l|l|l|l|l|l|}
 \hline
@@ -395,9 +406,15 @@ VAR模型的结果如表\ref{var_predict_result}所示。
 
 再分析EXPR模型。
 EXPR模型的预测结果如表\ref{expr_predict_result}。
+决策树模型仍然比神经网络效果更好，且差距相比VAR模型更大。
+神经网络模型的所有项目的训练集准确率都仅为38.69\%，
+虽然是一个多分类问题，但是数值仍然偏低。
+测试集准确率只有30.90\%。
+决策树模型的所有项目的训练集准确率虽然有86.57\%，
+但是测试集的准确率只有46.52\%。
+EXPR模型还有很大的提升空间。
 
-
-\begin{table}
+\begin{table}[!tbp]
 \centering
 \begin{tabular}{|l|l|l|l|l|l|l|l|l|}
 \hline
@@ -434,7 +451,14 @@ EXPR模型的预测结果如表\ref{expr_predict_result}。
 \label{expr_predict_result}
 \end{table}
 
-\todo{...}
+然后考虑预测模型的执行时间。
+这里计算的是章\ref{sec:gen_pred_impl}中验证阶段的时间，
+其时间和训练阶段时间基本一致。
+决策树模型的平均训练时间为22秒，
+而神经网络模型的平均训练时间为1382秒，
+约为23分钟。
+可见神经网络的训练时间远远高于决策树模型的训练时间，
+而且其准确率等指标效果不如决策树模型。
 
 \subsection{不同谓词对结果的影响}
 
@@ -505,7 +529,7 @@ $c_1$表示基于频谱的缺陷定位的结果（谓词恒真的\textsc{MaxPred
 为了进一步验证我们的发现，我们比较了使用三种预定义谓词的\textsc{MaxPred}和
 只使用了分支谓词的\textsc{MaxPred}（称为\textsc{MaxBranch}），
 结果如图\ref{fig:branch-compare}。
-可以发现\textsc{MaxPred}和\textsc{MaxBranch}的结果非常相近，
+可以发现\textsc{MaxPred}和~\textsc{MaxBranch}~的结果非常相近，
 虽然\textsc{MaxBranch}少了两种谓词，但是核心的分支谓词起了很大的作用。
 
 \begin{figure}[htbp] 

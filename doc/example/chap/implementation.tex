@@ -34,6 +34,7 @@
 生成谓词的语句都是被失败的测试用例覆盖的语句。
 
 \subsection{生成预测谓词模块}
+\label{sec:gen_pred_impl}
 
 生成预测谓词使用的是机器学习模型，使用Java和Python实现。
 首先，Java代码通过JDT遍历缺陷代码的抽象语法树，提取表\ref{var_feature}中的特征。
@@ -203,8 +204,7 @@ SOBER算法的每个谓词会对应若干个覆盖信息。
 
 怀疑度计算模块根据频谱信息的不同也分为两种。
 一种是SOBER算法的怀疑度计算，一种是其他算法的怀疑度计算。
-在实现上，SOBER算法继承父类 \mycode{TrueFalseCoverageNumberAlgorithm} 抽象类，
-其他算法继承父类 \mycode{PredicateCoverageAlgorithm} 抽象类。
+在实现上，SOBER算法继承一个父类，其他算法继承另一个父类。
 子类需要实现两个函数，一个是 \mycode{getName} 返回算法名，
 一个是 \mycode{getScore} 返回怀疑度。
 父类负责从磁盘读取执行信息并处理为频谱信息，计算并结合语句的怀疑度和谓词怀疑度，根据怀疑度对语句进行排序，最后输出到磁盘。
