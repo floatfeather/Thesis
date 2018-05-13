@@ -74,6 +74,7 @@ $a_{p}$ & 通过的测试用例执行的次数 \\
 
 \begin{table}
 \centering
+\renewcommand\arraystretch{2}
 \begin{tabular}{|c|c|c|}
 \hline
 公式名称 & 公式 \\
@@ -148,8 +149,8 @@ public double getNumericalMean() {
 使用Ochiai方法的话，该错误语句被排到第11位。
 并列的分数将取其平均排名（期望排名），这是很多研究方法所使用的评估方式\parencite{Pearson2017Evaluating,Xuan2014Learning,Steimann2013Threats,Wong2016A}。
 事实上该语句的分数位列第2位，但是一共有17个语句和该语句分数并列，导致最终排名为第11位。
-基于频谱的缺陷定位方法在这里失效了，因为获取的信息不足。
-其实这个缺陷更加适合使用基于状态覆盖的缺陷定位技术。
+基于频谱的缺陷定位方法在这里失效了，因为获取的信息不足，无法将它和正确的语句区分开来。
+为了获取更多的信息，可以使用粒度比语句还细的基于状态覆盖的缺陷定位技术。
 
 状态覆盖就是使用谓词把具体状态划分为抽象状态。
 比如，对于如下代码，
@@ -160,7 +161,7 @@ if (update_b) {
     b = Math.sqrt(a);
 }
 \end{lstlisting}
-当\mycode{a}和\mycode{b}的类型都为\mycode{int}时，如果\mycode{a}的值为最小的\mycode{int}时（\mycode{a = -2147483648}），
+当\mycode{a}和\mycode{b}的类型都为\mycode{int}时，如果\mycode{a}的值为最小的\mycode{int}（\mycode{a = -2147483648}），
 则代码会在第3行出错（\mycode{b}的值为\mycode{NAN}）。
 这是因为当\mycode{a = -2147483648}时，第1行的\mycode{a}会被赋值为一个负数，于是在第3行进行\mycode{sqrt}操作的时候，就会出错。
 在第1行的时候，考虑两个抽象的状态\mycode{a $\ge$ 0}和\mycode{a $<$ 0}。
@@ -213,11 +214,11 @@ $P$ & 通过的测试用例执行的次数 \\
 于是最终计算得到的怀疑度为0。
 而谓词3、4、6由于$t_f = 0$，导致$log(t_f) = -INF$，致使分母中第二项为0。
 虽然谓词1、2、5的分数比3、4、6的分数高，但是0分并没有让这个出错的语句在整个代码的执行语句中排到前面。
-事实上对于所有真分支被失败用例覆盖的语句，由于其$t_f = 1$，最终其怀疑度都为0。
-由于每个谓词都存在和它取值相反的另一个谓词（比如\mycode{x > y}和\mycode{x <= y}），所以$t_f = 1$总是存在的。
+事实上对于所有真分支被失败测试用例覆盖的语句，由于其$t_f = 1$，最终其怀疑度都为0。
+由于每个谓词都存在和它取值相反的另一个谓词（比如\mycode{x > y}和\mycode{x $\le$ y}），所以$t_f = 1$总是存在的。
 
 在这个例子中，统计性调试得到了具有划分缺陷状态和非缺陷状态的谓词。
-但是由于统计性调试需要多个失败的测试用例覆盖出错的语句，而在Defects4j这个数据集中多数缺陷都只有一个测试用例覆盖到，
+但是由于统计性调试需要多个失败的测试用例覆盖出错的语句，而在Defects4j这个数据集中多数缺陷都只有一个失败测试用例覆盖到，
 导致统计性调试的效果在Defects4j数据集上效果不好。
 在Liblit\parencite{Liblit2005Scalable}的实验中，对每一个研究对象生成32000个随机输入。
 于是一个错误语句往往能被多个失败的测试用例覆盖。
@@ -293,14 +294,7 @@ $$
 \mathrm{Sober}(s) = log\left( \frac{\sigma_p}{\sqrt{m}\varphi(Z)} \right)\label{eq:sober}
 \end{equation}
 
-从SOBER的公式可以看出，SOBER仍然是建立在有大量测试用例的基础上。
-少量的测试用例会让概率分布不能准确反映出谓词真假分支的取值分布。
-SOBER的验证实验也是在人造的Siemens数据集上完成的。
-
-在Defects4j的Math的第二个缺陷这个例子中，该错误语句的六个谓词中，\mycode{((double) (getSampleSize() * getNumberOfSuccesses()) / (double) getPopulationSize()) < 0}得分最高，覆盖情况见表\ref{math_2_sober}，怀疑度为360.85。
-在怀疑度列表中排名第10，效果并不理想。
-
-\begin{table}
+\begin{table}[tbp]
 \centering
 \begin{tabular}{|c|c|c|c|}
 \hline
@@ -324,6 +318,13 @@ SOBER的验证实验也是在人造的Siemens数据集上完成的。
 \caption{SOBER方法下，Defects4j的Math第二个缺陷的错误语句里，分数最高的谓词的覆盖情况}
 \label{math_2_sober}
 \end{table}
+
+从SOBER的公式可以看出，SOBER仍然是建立在有大量测试用例的基础上。
+少量的测试用例会让概率分布不能准确反映出谓词真假分支的取值分布。
+SOBER的验证实验也是在人造的Siemens数据集上完成的。
+
+在Defects4j的Math的第二个缺陷这个例子中，该错误语句的六个谓词中，\mycode{((double) (getSampleSize() * getNumberOfSuccesses()) / (double) getPopulationSize()) < 0}得分最高，覆盖情况见表\ref{math_2_sober}，怀疑度为360.85。
+在怀疑度列表中排名第10，效果并不理想。
 
 \section{分析结论}
 

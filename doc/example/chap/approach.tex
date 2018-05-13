@@ -1,4 +1,8 @@
-\chapter{设计}
+\chapter{基于谓词预测的结合现有技术的缺陷定位工具的设计}
+
+本章介绍了基于谓词预测的结合现有技术的缺陷定位工具的设计，
+讲述了基于频谱的缺陷定位和基于状态覆盖的缺陷定位的结合方式、
+缺陷定位工具框架、机器学习模型等。
 
 \section{结合基于频谱的缺陷定位和基于状态覆盖的缺陷定位}
 \label{sec:approach_comb}
@@ -13,7 +17,7 @@
 二是他们没有深入理解缺陷定位方法起作用的原因，仅仅是把各个方法的结果合在一起。
 
 所以，本文试图提出一个能够结合现有缺陷定位（比如基于频谱的缺陷定位和基于状态覆盖的缺陷定位）的方法去改进缺陷定位技术，
-同时本文试图解释这个结合为什么起作用的原因。
+同时本文试图解释这个结合为什么起作用。
 
 虽然在直觉上我们认为基于频谱的缺陷定位和基于状态覆盖的缺陷定位是完全不一样的。
 因为基于频谱的缺陷定位依靠的是程序元素的覆盖情况，
@@ -43,49 +47,6 @@
 使用Ochiai怀疑度公式，计算Math的第二个缺陷的各个谓词怀疑度，
 缺陷语句排名第3（第1到4名并列），相比于基于频谱的状态覆盖第11位、统计性调试全部为0和SOBER第10的结果，有显著提升。
 
-不仅如此，这样得到的结合了基于频谱的缺陷定位和基于状态覆盖的缺陷定位的结果，
-还可以和原始的基于频谱的缺陷定位的结果相结合。
-比如Math的第二个缺陷的错误语句，其基于频谱的缺陷定位的怀疑度为0.3780，
-加上结合后的谓词怀疑度1.0000，总怀疑度为1.3780，在怀疑度列表中排名第2。
-效果好于原始的定位结果和结合后的结果。
-
-基于频谱的缺陷定位和基于状态覆盖的缺陷定位的方法都可以表述为，
-给定一个程序元素$e$，一个产生谓词的函数$s$，和一个怀疑度计算公式$r$，
-对于这个程序元素$e$，它的分数函数$c$可以表述为：
-$$
-c(s,e,r) = max_{p \in s(e)}r(p)
-$$
-对于这个程序元素$e$，首先通过$s(e)$获取其所有谓词。
-对于基于频谱的缺陷定位方法这个谓词恒为\mycode{true}。
-然后对每个谓词$p$计算其在怀疑度公式$r$下的怀疑度$r(p)$。
-这个怀疑度公式包括基于频谱的缺陷定位和基于状态覆盖的缺陷定位怀疑度公式。
-上述例子提出的结合的方法，使用的基于频谱的缺陷定位的$r$，和基于状态覆盖的缺陷定位的$s$。
-这样可能会得到多个怀疑度，采用某种方式把它们结合起来（这里使用的最基本的$max$函数作为结合怀疑度的方法），
-就可以得到这个程序元素的最终分数。
-
-本文提出两种结合方法进行实验：
-\begin{itemize}
-\item \textbf{\textsc{MaxPred}} \\
-对于一个程序元素$e$，在某个怀疑度公式$r$和谓词$s(e)$下，
-计算得到的多个怀疑度分数，并取其最大值作为$e$的怀疑度。
-\item \textbf{\textsc{LinPred}} \\
-给定两组谓词$s_0(e)$和$s_1(e)$，使用\textsc{MaxPred}计算得到
-$e$的两个怀疑度$c_0$和$c_1$。
-再利用一个线性模型结合两个怀疑度，得到$C(e) = (1 - \alpha) \times c_0 + \alpha \times c_1$。
-\end{itemize}
-
-% \begin{itemize}
-% \item \textbf{\textsc{MaxPRED}}：
-% 给定一个程序元素$e$和一组和$e$相关的谓词$P$，
-% 则谓词$e$的怀疑度值是
-% 使用基于频谱的缺陷定位公式去计算语句的怀疑度（原始的基于频谱的缺陷定位方法）得到$s_0$，
-% 然后和 \textsc{PredSBFL} 计算得到的同一条语句的怀疑度$s_1$取最大值得到新的怀疑度，
-% $s = max(s_0, s_1)$
-% \item \textbf{\textsc{CombSD}}：
-% 使用一个线性模型去结合$s_0$和$s_1$的值，得到新的怀疑度：
-% $s = (1 - \alpha) \times s_{0} + \alpha \times s_{1}$。
-% \end{itemize}
-
 \begin{table}
 \centering
 \begin{tabular}{|c|l|c|}
@@ -108,6 +69,49 @@ $e$的两个怀疑度$c_0$和$c_1$。
 \caption{使用Ochiai计算谓词怀疑度，其中 \\ \mycode{retValue = (double) (getSampleSize() * getNumberOfSuccesses()) / (double) getPopulationSize()}}
 \label{math_2_ochiai}
 \end{table}
+
+不仅如此，这样得到的结合了基于频谱的缺陷定位和基于状态覆盖的缺陷定位的结果，
+还可以和原始的基于频谱的缺陷定位的结果相结合。
+比如Math的第二个缺陷的错误语句，其基于频谱的缺陷定位的怀疑度为0.3780，
+加上结合后的谓词怀疑度1.0000，总怀疑度为1.3780，在怀疑度列表中排名第2。
+效果好于原始的定位结果和结合后的结果。
+
+基于频谱的缺陷定位和基于状态覆盖的缺陷定位的方法都可以表述为，
+给定一个程序元素$e$，一个产生谓词的函数$s$，和一个怀疑度计算公式$r$，
+对于这个程序元素$e$，它的分数函数$c$可以表述为：
+$$
+c(s,e,r) = max_{p \in s(e)}r(p)
+$$
+对于这个程序元素$e$，首先通过$s(e)$获取其所有谓词。
+对于基于频谱的缺陷定位方法这个谓词恒为\mycode{true}。
+然后对每个谓词$p$计算其在怀疑度公式$r$下的怀疑度$r(p)$。
+这个怀疑度公式包括基于频谱的缺陷定位和基于状态覆盖的缺陷定位怀疑度公式。
+上述例子提出的结合的方法，使用的基于频谱的缺陷定位的$r$，和基于状态覆盖的缺陷定位的$s$。
+这样可能会得到多个怀疑度，采用某种方式把它们结合起来（这里使用的最基本的$max$函数作为结合怀疑度的方法），
+就可以得到这个程序元素的最终分数。
+
+本文提出两种结合方法：
+\begin{itemize}
+\item \textbf{\textsc{MaxPred}} \\
+对于一个程序元素$e$，在某个怀疑度公式$r$和谓词$s(e)$下，
+计算得到的多个怀疑度分数，并取其最大值作为$e$的怀疑度。
+\item \textbf{\textsc{LinPred}} \\
+给定两组谓词$s_0(e)$和$s_1(e)$，使用\textsc{MaxPred}计算得到
+$e$的两个怀疑度$c_0$和$c_1$。
+再利用一个线性模型结合两个怀疑度，得到$C(e) = (1 - \alpha) \times c_0 + \alpha \times c_1$。
+\end{itemize}
+
+% \begin{itemize}
+% \item \textbf{\textsc{MaxPRED}}：
+% 给定一个程序元素$e$和一组和$e$相关的谓词$P$，
+% 则谓词$e$的怀疑度值是
+% 使用基于频谱的缺陷定位公式去计算语句的怀疑度（原始的基于频谱的缺陷定位方法）得到$s_0$，
+% 然后和 \textsc{PredSBFL} 计算得到的同一条语句的怀疑度$s_1$取最大值得到新的怀疑度，
+% $s = max(s_0, s_1)$
+% \item \textbf{\textsc{CombSD}}：
+% 使用一个线性模型去结合$s_0$和$s_1$的值，得到新的怀疑度：
+% $s = (1 - \alpha) \times s_{0} + \alpha \times s_{1}$。
+% \end{itemize}
 
 \section{预定义谓词和预测谓词}
 
@@ -136,12 +140,16 @@ public Vector3D intersection(final SubLine subLine, final boolean includeEndPoin
 
 然而这个谓词并不能由预定义的谓词得到。
 但是事实上代码中其他的地方存在\mycode{var == null}这样的判断。
-于是本文提出了一种基于机器学习的预测谓词的方法，来更准确地找出划分缺陷状态的谓词。
+于是本文提出了一种基于机器学习的预测谓词的方法，通过预测出当前位置是否可能需要和项目其他相似位置相同类型的谓词，
+来更准确地找出划分缺陷状态的谓词。
 
 或许我们不使用机器学习方法，而是把\mycode{var == null}这样经典的判断加入预定义谓词呢？
 但问题是这样的谓词永远是加不完的。
 而且对于每个程序，它们可能还拥有跟自己上下文有关的独特的谓词。
 所以从它们自己的代码中来学习出谓词是更有效的方法。
+
+这种方式预测出来的谓词也可以带入\textsc{MaxPred}和\textsc{LinPred}当中。
+这时$s$函数返回的就是预测出的谓词。
 
 \section{缺陷定位框架}
 \label{sec:fl_frame}
@@ -154,14 +162,14 @@ public Vector3D intersection(final SubLine subLine, final boolean includeEndPoin
 \item \textbf{收集特征} 
 当使用预定义谓词时不需要这一步。
 假如缺陷代码是版本$v$，则从版本$v$的源代码中提取特征。
-特征分为两种，一种是变量预测模型的特征，一种是谓词预测模型的特征。
+特征被用于变量预测模型和谓词预测模型。
 \item \textbf{训练模型}
 当使用预定义谓词时不需要这一步。
 把得到的特征放入机器学习模型中训练。
-两种特征分别单独训练，得到一个预测变量出现在谓词中概率的模型（简称VAR模型），和一个根据一个变量预测可能出现哪些谓词的模型（简称EXPR模型）。
+特征分别单独训练，得到一个预测变量出现在谓词中概率的模型（简称VAR模型），和一个根据一个变量预测可能出现哪些谓词的模型（简称EXPR模型）。
 \item \textbf{收集失败测试用例覆盖的语句}
 只有被失败的测试用例覆盖的语句才有可能是错误的语句。
-因为只需要对失败测试用例覆盖的语句收集其谓词的覆盖情况就可以了。
+因此只需要对失败测试用例覆盖的语句收集其谓词的覆盖情况就可以了。
 \item \textbf{获取谓词}
 如果使用预定义谓词，则根据预定义谓词的规则分析代码，得到谓词。
 如果使用预测谓词模型，则提取需要插入谓词的相关变量和语句的特征，
@@ -200,7 +208,7 @@ EXPR模型的标签是这个变量相关的谓词是什么。
 这些特征有的是认为这些特征相似度更高的变量更可能会有相似的属性。
 相似的文件名、函数名可能是实现着相似的功能，比如可能是继承了同一个父类的子类。
 变量名相似也可能是有相似的功能，比如 \mycode{len} 和 \mycode{length}。
-类型相同同理，比如对一个 \mycode{Object} 类型的变量进行是否为空指针的判断。
+类型同理，比如对一个 \mycode{Object} 类型的变量进行是否为空指针的判断。
 相似的功能可能就会使用相似的谓词。
 还有特征是描述这个变量的上下文信息，这些特征也会影响谓词。
 比如 LastAssign 说明了这个变量值是如何得到的，比如从\mycode{getMin()}函数得到的值\mycode{v}容易出现在谓词中，并且谓词
@@ -269,7 +277,7 @@ OutUse & 变量在条件外的使用方式 \\
 字符串的变量和其它的变量不同，它们之间还有内部的特征。
 比如变量名len和length之间的相似度比len和domain之间的相似度要高，
 文件名SubLine.java和Line.java之间的相似度比SubLine.java和BracketFinder.java之间的相似度高。
-简单地把不同字符串看成完全独立地不同特征会丢失很多有用的信息。
+简单地把不同字符串看成完全独立的不同特征会丢失很多有用的信息。
 \end{enumerate}
 
 对字符串的编码采取三步。
@@ -321,7 +329,7 @@ $g_{func}$和$g_{file}$是向量下标和字符串的映射。
 这种情况下使用$g_{func}$和$g_{file}$直接构造特征向量。
 第二种情况是，这个文件名按照驼峰拆分之后的字符串有没有出现过的。
 没有出现过的字符串则会被忽略。
-构造出的特征向量使用训练时的聚类模型划分分类，最后使用训练时的独热编码给改分类编码。
+构造出的特征向量使用训练时的聚类模型划分分类，最后使用训练时的独热编码给分类编码。
 
 对于除变量名、文件名、函数名以外的分类变量，
 如果出现了新的值，假设这个分类变量的类别有$C$个，
@@ -329,7 +337,13 @@ $g_{func}$和$g_{file}$是向量下标和字符串的映射。
 
 \subsection{机器学习模型}
 
-本文在小量数据上尝试了多种机器学习模型，最后选定了两种机器学习模型：全连接神经网络和随机森林模型。
+本文在小量数据上尝试了多种机器学习模型，最后选定了两种机器学习模型：
+\begin{itemize}
+\item 全连接神经网络
+\item 随机森林
+\end{itemize}
+
+这两种模型都使用相同的特征进行训练。
 
 \subsubsection{神经网络模型}
 
@@ -337,7 +351,6 @@ VAR模型和EXPR模型使用同样的全连接神经网络。
 这个神经网络由一个输入层，六个隐藏层，一个输出层，一个softmax层构成。
 输入层的神经元数量和特征数量一致，输出层的神经元数量和分类数量一致。
 对于VAR模型来说输出层的神经元有两个，对于EXPR模型来说输出层的神经元数量和可能的谓词数量一样。
-六个隐藏层每层都是64个节点。这个是小部分实验之后得出的比较适合的值。
 采用的激励函数是广泛使用的线性整流函数（ReLU）。
 $$
 \mathrm{ReLU}(features) = max(features, 0)
@@ -353,7 +366,7 @@ $(S_1, S_2, ..., S_c)$，则有
 $$
 S_j = \frac{e^{a_j}}{\sum_{k=1}^c{e^{a_k}}}
 $$
-以softmax层的输出计算softmax cross enptropy：
+以softmax层的输出计算softmax交叉熵：
 $$
 E = -\sum_{j = 1}^{c}{y_jlog(S_j)}
 $$
@@ -368,10 +381,16 @@ $$
 
 \subsubsection{随机森林模型}
 
-随机森林是一种常用的机器学习方法。顾名思义，随机森林是一棵树，包含一个根节点、若干个内部节点和叶节点。
+随机森林是一种常用的机器学习方法。顾名思义，随机森林包含多棵树，每棵树包含一个根节点、若干个内部节点和叶节点。
+随机森林是以决策树为基础构建的集成学习，并在决策树的训练过程中引入了随机属性选择。
 每个叶节点对应一个决策结果，内部节点和根节点则对应于一个属性测试。
-根据节点的属性测试，样本被划分到对应的子节点中。
-其学习流程的基本思想是分治法。
+对决策树来说，
+根据节点的属性测试，样本被划分到最优属性对应的子节点中。
+而在随机森林中，
+对基决策树的每个节点，
+从其属性集合中随机选择一个包含若干个属性的子集，
+然后在这个子集中选择一个最优属性用于划分。
+% 其学习流程的基本思想是分治法。
 
 随机森林中需要依靠节点的纯度来选择最优划分属性。
 本文使用的基尼指数来选择划分属性。
@@ -389,74 +408,14 @@ $$
 \section{收集频谱信息}
 
 代码插装是一种常用的记录程序执行情况、修改程序的方法。
-采用的工具是 eclipse 提供的Java Development Tool\footnote{\url{http://www.eclipse.org/jdt/}}，简称JDT。
-JDT不仅可以构造给定Java代码的抽象语法树，还可以新建、修改、插入、删除抽象语法树从而新建、修改、插入、删除Java代码。
-本章中很多实现都依赖于JDT。
-
-本文使用代码插装技术主要目的是收集频谱信息。
+通过在代码中插入、修改代码，来改变代码的一些功能。
+本文使用代码插装技术插入谓词，收集频谱信息。
 比如为了收集失败测试用例覆盖的语句，可以在每个语句后面加上一个打印语句。
 这个打印语句会打印出当前的文件名和对应语句的行数。
 用失败的测试用例执行这个插装后的程序，就可以得到失败测试用例覆盖的语句。
 
-对于谓词$P$和一个测试用例$T_i$，可能需要收集四种信息：
-\begin{enumerate}
-\item $P$是否被$T_i$观察过（无论是真还是假）。
-\item $T_i$中$P$是否至少一次为真。
-\item $T_i$中$P$为真的次数。
-\item $T_i$中$P$为假的次数。
-\end{enumerate}
-
-对于基于频谱的缺陷定位的公式来说，需要第2个信息。
-对于统计性调试的公式来说，需要第1、2个信息。
-对于SOBER的公式来说，需要第3、4个信息。
-所以整体来说谓词的插装有两种形式。
-第一种用于基于频谱的缺陷定位公式和统计性调试公式：
-\lstset{language=Java}
-\begin{lstlisting}
-// predicateSignature is a string that uniquely represents the predicate.
-SpecLogger.observe(predicateSignature);
-if (predicate) {
-    SpecLogger.cover(predicateSignature);
-}
-\end{lstlisting}
-\mycode{SpecLogger.observe}记录这个谓词为观察过（信息1），
-\mycode{SpecLogger.cover}记录这个谓词为真过（信息2）。
-第二种用于SOBER公式：
-\lstset{language=Java}
-\begin{lstlisting}
-// predicateSignature is a string that uniquely represents the predicate.
-if (predicate) {
-    SpecLogger.coverTrueBranch(predicateSignature);
-} else {
-    SpecLogger.coverFalseBranch(predicateSignature);
-}
-\end{lstlisting}
-\mycode{coverTrueBranch}记录这个谓词为真的次数（信息3），
-\mycode{coverFalseBranch}记录这个谓词为假的次数（信息4）。
-
-这几个\mycode{SpecLogger}的函数可以是把自己内部的某个布尔型的成员变量置为真或假，
-也可以是把自己内部的某个整型的成员变量加一。
-这个\mycode{SpecLogger}对象在每个测试用例开始的时候重置（使用静态方法变量），并在测试用例结束的时候以某种格式将自己记录的信息输出到文件。
-\lstset{language=Java}
-\begin{lstlisting}
-private void testSomething() {
-    SpecLogger.reset();
-    SpecLogger.testStatus = true;
-
-    // test ...
-    ...
-
-    SpecLogger.dump();
-}
-\end{lstlisting}
-第三行是根据当前测试用例\mycode{testSomething}是通过的测试用例还是失败的测试用例而插装的。
-最后\mycode{SpecLogger.dump}把记录的信息输出到文件。
-其他程序从这个输出文件中可以构造出频谱信息。
-
-\section{不改变程序状态地插入谓词}
-
-统计性调试中自定义的谓词和预测出来的谓词可能有副作用。
-使用上一章中的插装方法会改变程序的执行状态，所以需要不改变程序状态地插入谓词。
+统计性调试中自定义的谓词和预测出来的谓词可能有副作用，
+插装后会改变原有的执行结果。
 
 统计性调试中的谓词要么是两个变量构成的二元表达式，要么就是本来就会在程序中执行的条件表达式。
 前者不会有副作用，而后者即使有副作用，由于其本来就要在原程序中执行一次，因此只要利用执行的这一次的结果就可以。
@@ -464,110 +423,6 @@ private void testSomething() {
 预测出来的谓词可能含有有副作用的函数，或者含有赋值语句。
 于是对预测出谓词的静态分析，只留下一定无副作用的谓词。
 比如除了部分指定函数（如size），含有其他函数的谓词都会被过滤掉。
-
-插入谓词仍然使用JDT。
-
-\subsection{插入预测的谓词}
-
-通过机器学习模型，每个语句可能会关联一组谓词。
-这些谓词会被机器学习模型赋予出现的概率。
-最终每个语句我们选择概率最高的5个谓词作为需要插入的谓词。
-
-在插入预测的谓词之前，要先对谓词进行过滤。
-过滤包括两步：
-\begin{enumerate}
-\item 静态分析过滤掉可能不合法的谓词（比如对一个\mycode{int}类型的变量进行下标访问）。
-\item 静态分析过滤掉可能有副作用的谓词。
-\item 过滤掉不能编译的谓词。
-\end{enumerate}
-
-一个预测出来的谓词分为两部分，一个是谓词$P(x)$，一个是变量$v$，最终构成谓词$P(v)$。
-一个谓词会被判定为不合法如果它满足以下至少一点：
-\begin{itemize}
-\item 含有数组访问\mycode{v[i]}且\mycode{v}并不是数组类型。
-\item 含有变量访问\mycode{v.a}且\mycode{v}是一个基本数据类型（比如\mycode{int}）的变量。
-\item 含有变量访问\mycode{a.v}且\mycode{v}不是\mycode{a}的一个域。
-\item \todo{simple name}
-\item 含有函数调用\mycode{v.a()}且\mycode{v}是一个基本数据类型变量。
-\item 含有函数调用\mycode{f()}且\mycode{f}不属于预定义的合法函数（如\mycode{size}，\mycode{length}，\mycode{toString}，\mycode{contains}，\mycode{containsKey}，\mycode{Math.abs}，\mycode{Double.isInfinite}，\mycode{Double.isNaN}）。
-\item 含有域访问\mycode{v.a}且\mycode{v}是一个基本数据类型的变量。
-\item 含有中缀表达式\mycode{a op b}且\mycode{a,b}的类型和运算符\mycode{op}不匹配（比如对非数字类型进行加法）。
-\end{itemize}
-
-过滤有副作用的谓词主要是过滤掉以下几种：
-\begin{itemize}
-\item 含有前缀表达式，且其中运算符为\mycode{++}或\mycode{--}。
-\item 含有后缀表达式。
-\item 含有赋值语句。
-\end{itemize}
-
-最后单独地插入每一条谓词，过滤掉不能顺利编译的。
-在没有判定谓词是否合法的时候，也可以通过编译来排除不合法的谓词。
-但是由于谓词数量较多，通过预处理去掉部分肯定不对的谓词可以加速整个流程。
-
-最后对于一个语句$s$，我们可以得到一组合法无副作用的谓词${P_1,P_2...}$。
-我们再加入取反的谓词${!P_1, !P_2, ...}$。
-
-然后就是将收集谓词频谱信息的代码插入到语句前或后。
-语句前后都插入的有\mycode{while，for，do}，
-插入在语句后面的有赋值语句，
-插入在语句前的有\mycode{if，switch}等其他所有语句。
-
-%\mycode{Assignment，VariableDeclarationStatement, ConstructorInvocation, SuperConstructorInvocation}，
-
-\subsection{插入预定义的谓词}
-
-预定义的谓词也可能有副作用，比如赋值语句\mycode{a[b++] = c}的谓词\mycode{a[b++] > d}，
-如果使用此前的插装方法，则插入\mycode{if (a[b++] > d)}这样的语句会产生副作用。
-但是如果使用中间变量，则上述代码可以重写为：
-\lstset{language=Java}
-\begin{lstlisting}
-temp = c;
-a[b++] = temp;
-if (temp > d) {
-    ...
-}
-\end{lstlisting}
-所以预定义谓词的三种情况，分支、返回、数值对，都可以使用中间变量这样的方式来插入谓词，从而避免了副作用的情况。
-
-由于分支对应多种情况，使用中间变量会比较复杂。
-分支的谓词是分支中含有的条件表达式。
-\mycode{DoStatement}中的条件表达式的值每次循环都会更新，再考虑上\mycode{continue}这样的语句，
-会让条件表达式的更新逻辑非常复杂。
-为了简单地插入谓词，并且由于条件表达式的类型都是布尔型，使用一个函数\mycode{logConditionCoverage}替换条件表达式。
-原代码为：
-\lstset{language=Java}
-\begin{lstlisting}
-// example.java:
-while(!iter.isEmpty()) {
-	...
-}
-\end{lstlisting}
-插装了收集谓词频谱信息的语句后，代码被修改为：
-\lstset{language=Java}
-\begin{lstlisting}
-// example.java
-while(SpecLogger.logConditionCoverage(!iter.isEmpty(), "!iter.isEmpty()", "!(!iter.isEmpty())") {
-	...
-}
-
-// SpecLogger.java
-public static boolean logConditionCoverage(boolean condition, String trueLogInfo, String falseLogInfo) {
-	observe(trueLogInfo);
-	observe(falseLogInfo);
-	if (condition) {
-		cover(trueLogInfo);
-	} else {
-		cover(falseLogInfo);
-	}
-	return condition;
-}
-\end{lstlisting}
-这里同时记录了假分支的覆盖情况。这样做有两个目的：
-\begin{itemize}
-\item 统计性调试中预定义的分支型谓词有条件表达式取反。
-\item 和预测谓词加入了谓词取反的情况保持一致。
-\end{itemize}
 
 \section{计算怀疑度}
 

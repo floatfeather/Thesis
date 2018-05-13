@@ -6,19 +6,20 @@
 程序调试是一个耗费时间的任务，已经有很多研究者提出了各种不同的自动缺陷定位技术去减轻手动调试的负担。
 在这些自动缺陷定位技术中，基于频谱的缺陷定位和基于状态覆盖的缺陷定位是两中比较常用的缺陷定位技术。
 这两种技术都是在执行时收集一些统计信息。
-这两种技术一些相似之处，但是两种技术一直单独地发展，而它们的结合也一直没有被系统地讨论过。
+这两种技术存在一些相似之处，但是两种技术一直单独地发展，而它们的结合也一直没有被系统地讨论过。
 
-本文对基于频谱的缺陷定位和基于状态覆盖的缺陷定位技术的结合进行了系统的实证研究。
-首先，本文构建了一个两种技术的统一模型，并在这个模型上系统地探索了四种变体：
+本文对基于频谱的缺陷定位和基于状态覆盖的缺陷定位技术的结合进行了系统的实证研究，
+并且提出一种基于机器学习的谓词预测的方法帮助缺陷定位。
+本文构建了一个两种技术的统一模型，并在这个模型上系统地探索了四种变体：
 不同粒度的数据收集、不同的怀疑度公式、不同的怀疑度结合方式、不同的谓词。
-然后，本文还提出了一个基于机器学习的谓词预测模型，来替代基于状态覆盖的缺陷定位原有的预定义谓词。
+此外，本文还提出了一个基于机器学习的谓词预测模型，来完善基于状态覆盖的缺陷定位原有的预定义谓词。
 
 本文的研究得到了很多结论。
 第一，更细粒度的数据收集的效果远远好于粗粒度的数据收集，并且只需要花费稍微多一点的执行时间。
 第二，把基于频谱的缺陷定位公式应用在基于状态覆盖的缺陷定位的预定义谓词上，其效果反而好于原有的基于状态覆盖的缺陷定位的公式。
-第三，一个基于频谱的缺陷定位和基于状态覆盖的缺陷定位的线性结合模型，效果比两者都更好。
+第三，一个基于频谱的缺陷定位和基于状态覆盖的缺陷定位的线性结合模型的效果比两者都更好。
 第四，结合方法的效果大部分得益于分支谓词。
-\todo{机器学习相关结论}
+第五，预测的谓词在某些指标上获得了比预定义谓词更好的结果。预测谓词与预定义谓词具有互补性，两者结合后定位效果进一步提升。
 
 \end{cabstract}
 
@@ -34,7 +35,8 @@ Though the ideas are similar, the two families have been developed independently
 and their combinations have not been systematically explored.
 
 In this paper we perform a systematical empirical study on the combination of spectrum-based
-fault localization and statistical debugging.
+fault localization and statistical debugging,
+and we propose a predicate prediction technique based on machine learning to help to locate the faults.
 We first build a unified model of the two techniques,
 and systematically explores four types of variations:
 different granularities of data collection,
@@ -52,7 +54,9 @@ Third, a linear combination of spectrum-based fault localization and
 statistical debugging outperforms both individual approaches.
 Forth, most of the effectiveness of the combined approach contributed by a simple type of predicates:
 branch conditions.
-
+Fifth, the predicted predicates are better than pre-defined predicates in some metrics.
+The predicated predicates and pre-defined predicates are complementary.
+The combination of them has further improvement.
 \end{eabstract}
 
 % vim:ts=4:sw=4
