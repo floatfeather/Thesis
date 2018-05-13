@@ -46,7 +46,7 @@ Python程序则读入 csv 文件中的特征，对特征进行编码和训练。
 使用 scikit-learn 的 \mycode{LabelEncoder} 对特征 FileName，MethodName，VarName，VarType，LastAssign，BodyUse
 和 OutUse 进行编码，归一化为数字，然后使用 \mycode{OneHotEncoder} 转为独热编码。
 
-训练阶段，特征被放入神经网络或者决策树中。
+训练阶段，特征被放入神经网络或者随机森林中。
 神经网络使用的全连接神经网络，用TensorFlow\footnote{\url{https://www.tensorflow.org/}}的 \mycode{DNNClassifier} 实现。
 TensorFlow 是一个采用数据流图用于数值计算的开源软件库。
 图中的节点表示数学操作，图中的线则表示在节点间相互联系的多维数据数组。
@@ -110,11 +110,11 @@ $$。
 验证损失和准确率使用 \mycode{evaluate} 方法。
 神经网络使用的优化算法是 \mycode{ProximalAdagradOptimizer}，
 初始学习率设置为0.05，L2正则惩罚系数为0.0001。
-决策树使用 scikit-learn 中的决策树 \mycode{DecisionTreeClassfier} 。
+随机森林使用 scikit-learn 中的随机森林 \mycode{RandomForestClassfier} 。
 训练使用其 \mycode{fit} 方法。
 训练好的模型被保存在磁盘中。
 神经网络模型直接通过设置 \mycode{model\_dir} 参数保存，
-决策树模型使用 pickle\footnote{\url{https://docs.python.org/3/library/pickle.html}} 保存。
+随机森林模型使用 pickle\footnote{\url{https://docs.python.org/3/library/pickle.html}} 保存。
 
 预测阶段，对收集的失败测试用例覆盖的语句进行谓词预测。
 首先用Java的JDT提取语句中左值变量的特征，然后写入磁盘上的 csv 文件。
@@ -128,7 +128,7 @@ Python程序读入 csv 文件中的特征和编码阶段存储的聚类模型。
 该方法返回预测结果的一个列表。
 列表中一个元素对应于一个预测输入，该元素的 \mycode{probabilities} 域表示这个样本属于各个标签的概率，
 \mycode{classes} 域表示表示这个样本的预测标签。
-决策树通过 \mycode{predict\_proba} 方法预测，得到一个矩阵。每行对应一个样本，每列对应这个样本属于某个标签的概率。
+随机森林通过 \mycode{predict\_proba} 方法预测，得到一个矩阵。每行对应一个样本，每列对应这个样本属于某个标签的概率。
 VAR模型会输出这个变量出现在谓词中的概率，EXPR模型会对一个样本的概率值排序，取概率最高的200个输出。
 最后，将同一个变量其VAR模型的输出$P_{var}$和EXPR模型的输出$P_{pred_i}$相乘，把联合概率大于$0.005$的变量及谓词输出。
 
@@ -138,7 +138,7 @@ VAR模型会输出这个变量出现在谓词中的概率，EXPR模型会对一�
 然后使用训练集和验证集去训练模型，对得到的模型使用测试集验证其准确率。
 神经网络的准确率计算使用 \mycode{DNNClassifier} 自带的 \mycode{evaluate} 方法
 的域 \mycode{accuracy} 获得。
-决策树的准确率使用 \mycode{DecisionTreeClassfier} 自带的 \mycode{score} 方法获得。
+随机森林的准确率使用 \mycode{RandomForestClassfier} 自带的 \mycode{score} 方法获得。
 而两者的其他评估数值由 scikit-learn 提供的计算接口获得。
 
 过滤阶段，过滤掉预测出不合法或有副作用的谓词。
