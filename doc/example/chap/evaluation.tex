@@ -1,6 +1,6 @@
 \chapter{实验与验证}
 
-本章介绍了基于谓词预测的结合现有技术的缺陷定位工具的实验。
+本章介绍了\toolname{}的实验。
 围绕五个研究问题，设计实验，根据结果回答了五个研究问题。
 
 \section{研究问题}
@@ -107,7 +107,7 @@ EXAM 分数是一个0到1之间的值，且值越小越好。
 \centering
 \begin{tabular}{|c|c|c|}
 \hline
-\multirow{2}*{真实情况} & \multicolumn{2}{|c|}{预测结果} \\
+\multirow{2}*{真实情况} & \multicolumn{2}{c|}{预测结果} \\
 \cline{2-3}
 ~ & 正例 & 反例 \\
 \hline
@@ -377,7 +377,7 @@ F1分数在83.63\%到92.72\%之间波动。
 \centering
 \begin{tabular}{|l|l|l|l|l|l|l|l|l|}
 \hline
-\multirow{2}*{项目} & \multicolumn{4}{|c|}{神经网络模型} & \multicolumn{4}{|c|}{随机森林模型} \\
+\multirow{2}*{项目} & \multicolumn{4}{c|}{神经网络模型} & \multicolumn{4}{c|}{随机森林模型} \\
 \cline{2-9}
 & 准确率 & 查准率 & 查全率 & F1分数 & 准确率 & 查准率 & 查全率 & F1分数 \\
 \hline
@@ -414,7 +414,7 @@ F1分数在83.63\%到92.72\%之间波动。
 \centering
 \begin{tabular}{|l|l|l|l|l|l|l|l|l|}
 \hline
-\multirow{2}*{项目} & \multicolumn{4}{|c|}{神经网络模型} & \multicolumn{4}{|c|}{随机森林模型} \\
+\multirow{2}*{项目} & \multicolumn{4}{c|}{神经网络模型} & \multicolumn{4}{c|}{随机森林模型} \\
 \cline{2-9}
 & 准确率 & 查准率 & 查全率 & F1分数 & 准确率 & 查准率 & 查全率 & F1分数 \\
 \hline
@@ -686,6 +686,8 @@ $c_1$表示基于频谱的缺陷定位的结果。
 可以发现，Top-1指标上结合后相比于\textsc{LinSD}提升了5个缺陷。
 总体上来说，结合后的效果比\textsc{LinSD}和\textsc{LinDnn}都要更好。
 可见两种谓词在一定程度上具有互补性。
+
+\finding{预测谓词与预定义谓词结合后效果进一步提升，二者具有互补性。}
 
 \begin{table}
 \centering
