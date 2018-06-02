@@ -22,12 +22,11 @@
 在传统的开发环境当中，人们可以手动调试来定位缺陷，比如插入断点、打印日志信息等等。
 在1989年Collofello等人就指出尝试去减少软件中的错误会花费50\%到80\%的开发和维护的精力\parencite{Collofello1989Evaluating}。
 随着软件的复杂性的上升，手动地定位软件缺陷将会耗费更多开发者的时间和精力。
-为了提高定位缺陷的速度，研究人员对自动化的缺陷定位展开了研究，并取得了巨大的进展
-\parencite{Weiser1981Program,Weiser1984Program,Reps1997The,Ball2003From,Groce2004Understanding,
-Jones2002Visualization,Liblit2005Scalable,Liu2005SOBER,
-Renieres2003Fault,Abreu2006An,Xie2013A,W2009BP,
-Wong2012Effective,Le2016A,Papadakis2015Metallaxis,Moon2014Ask,Zhang2006Locating,
-Chandra2011Angelic,Shapiro1982Algorithmic,Zeller2002Isolating,Zeller2002Simplifying}。
+为了提高定位缺陷的速度，研究人员对自动化的缺陷定位展开了研究，并取得了巨大的进展，
+比如基于切片的缺陷定位\parencite{Weiser1981Program,Weiser1984Program}、
+基于频谱的缺陷定位\parencite{Reps1997The,Harrold2000An,Renieres2003Fault,Jones2002Visualization,Abreu2006An}、
+基于状态覆盖的缺陷定位\parencite{Liblit2005Scalable,Liu2005SOBER,Le2016A}、
+基于变异的缺陷定位\parencite{Papadakis2015Metallaxis,Moon2014Ask}等等。
 然而在2011年，Partin和Osro的一篇调查\parencite{Parnin2011Are}通过研究缺陷定位技术在实际应用场景下的效果，发现以往的评价指标并不能准确的反映缺陷定位技术在实际应用中的效果。
 以往的缺陷定位技术是基于一系列关于开发人员会如何调试的假设，而这些假设在实际场景的某些情况下会失效。
 自动化缺陷定位技术还有很大的发展空间。

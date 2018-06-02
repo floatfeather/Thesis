@@ -19,12 +19,35 @@
 % 若需按照中文文献在前，英文文献在后排序，请设置“sorting = centy”；
 % 若需按照引用顺序排序，请设置“sorting = none”。
 % 若需在排序中实现更复杂的需求，请参考 biblatex-caspervector 的文档。
-\usepackage[backend = biber, style = caspervector, utf8, sorting = ecnty]{biblatex}
+% \usepackage[backend = biber, style = caspervector, utf8, sorting = none, maxbibnames = 99, giveninits = true]{biblatex}
+\usepackage[backend=biber,style=gb7714-2015,giveninits=true]{biblatex}
 
 % 按学校要求设定参考文献列表中的条目之内及之间的距离。
 \setlength{\bibitemsep}{3bp}
 % 对于 linespread 值的计算过程有兴趣的同学可以参考 pkuthss.cls。
 \renewcommand*{\bibfont}{\zihao{5}\linespread{1.27}\selectfont}
+
+% \makeatletter % modify the inernal command inside biblatex-caspervector
+
+% \renewcommand*\bbx@cnperiod{．} % use "fullwidth full stop" punctuation (U+FF0E) instead of "。"
+
+% \DeclareFieldFormat*{booktitle}{#1} % remove \mkbibemph and use normal font
+% \DeclareFieldFormat*{journaltitle}{#1} % remove \mkbibemph
+% \DeclareFieldFormat*{title}{#1} % remove \mkbibemph
+% \DeclareFieldFormat*{volume}{#1} % remove \mkbibemph
+% \DeclareFieldFormat[inbook, inproceedings, incollection, article]%
+%         {title}{\bbx@mybibquote{#1}} % remove \mkbibemph
+% \DeclareFieldFormat*{year}{#1} % remove bold sytle for "year", and 
+
+% % \renewbibmacro*{urldate}{%
+% %         \iffieldundef{urlyear}{}{%
+% %                 \printtext{\bbx@cegen{[\bbx@cnretr}{[retrieved on}\addspace}%
+% %                 \printurldate%
+% %         ]% brackets closed
+% %         }%
+% % } % add square brackets around access date (GB/T 7714-2015)
+
+% \makeatother % the end of re-definition of internal command
 
 % 设定文档的基本信息。
 \pkuthssinfo{

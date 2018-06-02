@@ -68,7 +68,7 @@ VAR模型和EXPR模型的批尺寸（batch size）都为128。
 此后每次都再输入一个周期，并收集训练集和验证集在输入这个周期后的新模型上的损失和准确率。
 程序会收集最近的\mycode{1}到\mycode{2 * TEST\_EPOCHS}个周期的
 训练集和验证集的损失，记为$L(i, j)$。
-其中$i$表示是最近的第$i$个周期的损失，$j$为$true$的话表示是训练集的损失，为$false$表示是验证集的损失。
+其中$i$表示是最近的第$i$个周期的损失，$j$为\textit{true}的话表示是训练集的损失，为\textit{false}表示是验证集的损失。
 然后分别计算\mycode{1}到\mycode{TEST\_EPOCHS}，\mycode{TEST\_EPOCHS + 1}到\mycode{2 * TEST\_EPOCHS}
 的训练集总损失值
 $$
@@ -84,7 +84,7 @@ $$
 $$
 Loss_4 = \mathrm{Loss}(TE + 1, 2 * TE, false)
 $$。
-其中$TE$表示\mycode{TEST\_EPOCHS}，
+其中\textit{TE}表示\mycode{TEST\_EPOCHS}，
 $\mathrm{Loss}$定义如下：
 $$
 \mathrm{Loss}(start, end, j) = \sum_{i=start}^{end}{L(i, j)}

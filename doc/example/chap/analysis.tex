@@ -27,6 +27,7 @@ public Complex reciprocal() {
 
 \begin{table}
 \centering
+\caption{Defects4j中Math的第五个缺陷的语句覆盖情况}
 \begin{tabular}{|c|c|c|}
 \hline
 语句 & 被覆盖的失败测试用例个数 & 被覆盖的通过测试用例个数 \\
@@ -37,7 +38,6 @@ public Complex reciprocal() {
 7 & 1 & 0 \\
 \hline
 \end{tabular}
-\caption{Defects4j中Math的第五个缺陷的语句覆盖情况}
 \label{math_5_statecover}
 \end{table}
 
@@ -50,6 +50,7 @@ public Complex reciprocal() {
 为方便此后的表述，引入一些数学符号，见表\ref{spec_symbol}。表中的统计量就是程序频谱。
 \begin{table}
 \centering
+\caption{基于频谱的缺陷定位的数学符号及其意义}
 \begin{tabular}{|c|c|}
 \hline
 $a_{ef}$ & 一个语句被失败的测试用例覆盖的次数 \\
@@ -65,7 +66,6 @@ $a_{f}$ & 失败的测试用例的个数 \\
 $a_{p}$ & 通过的测试用例执行的次数 \\
 \hline
 \end{tabular}
-\caption{基于频谱的缺陷定位的数学符号及其意义}
 \label{spec_symbol}
 \end{table}
 
@@ -75,6 +75,7 @@ $a_{p}$ & 通过的测试用例执行的次数 \\
 \begin{table}
 \centering
 \renewcommand\arraystretch{2}
+\caption{部分基于频谱的缺陷定位怀疑度公式}
 \begin{tabular}{|c|c|c|}
 \hline
 公式名称 & 公式 \\
@@ -94,7 +95,6 @@ Op2\parencite{Naish2011A} &
 $\mathrm{Susp}(s) = a_{ef} - \frac{a_{ep}}{a_p + 1}$ \\
 \hline
 \end{tabular}
-\caption{部分基于频谱的缺陷定位怀疑度公式}
 \label{susp_formula}
 \end{table}
 
@@ -115,6 +115,7 @@ Ochiai，Barinel和DStar认为第2行和第6行的怀疑度接近，而第7行�
 
 \begin{table}
 \centering
+\caption{Defects4j中Math的第五个缺陷的经典公式怀疑度}
 \begin{tabular}{|l|c|c|c|}
 \hline
 公式 & 第2行 & 第6行 & 第7行 \\
@@ -130,7 +131,6 @@ DStar & 0.2000 & 0.2500 & Infinity \\
 Op2 & 0.9988 & 0.9990 & 1.0 \\
 \hline
 \end{tabular}
-\caption{Defects4j中Math的第五个缺陷的经典公式怀疑度}
 \label{math_5_susp}
 \end{table}
 
@@ -146,9 +146,9 @@ public double getNumericalMean() {
 }
 \end{lstlisting}
 
-使用Ochiai方法的话，该错误语句被排到第11位。
+使用Ochiai方法的话，该错误语句被排到第10位。
 并列的分数将取其平均排名（期望排名），这是很多研究方法所使用的评估方式\parencite{Pearson2017Evaluating,Xuan2014Learning,Steimann2013Threats,Wong2016A}。
-事实上该语句的分数位列第2位，但是一共有17个语句和该语句分数并列，导致最终排名为第11位。
+事实上该语句的分数位列第2位，但是一共有17个语句和该语句分数并列，导致最终排名为第10位。
 基于频谱的缺陷定位方法在这里失效了，因为获取的信息不足，无法将它和正确的语句区分开来。
 为了获取更多的信息，可以使用粒度比语句还细的基于状态覆盖的缺陷定位技术。
 
@@ -181,6 +181,7 @@ Liblit\parencite{Liblit2005Scalable}提出的统计性调试使用预定义谓�
 为方便此后的表述，引入数学符号表\ref{state_symbol}。
 \begin{table}
 \centering
+\caption{统计性调试的数学符号及其意义}
 \begin{tabular}{|c|c|}
 \hline
 $t_f$ & 一个谓词被观测为真的失败的测试用例的个数 \\
@@ -196,36 +197,43 @@ $F$ & 失败的测试用例的个数 \\
 $P$ & 通过的测试用例执行的次数 \\
 \hline
 \end{tabular}
-\caption{统计性调试的数学符号及其意义}
 \label{state_symbol}
 \end{table}
 
 通过预定义谓词被测试用例的覆盖情况，计算得到每个谓词对应的怀疑度：
 \begin{equation}
-\mathrm{StatisticalDebugging}(s) = \frac{2}{\frac{1}{\frac{t_f}{t_f + t_p} - \frac{a_f}{a_f + a_p}} + \frac{log(F)}{log(t_f)}}\label{eq:sd}
+\mathrm{StatisticalDebugging}(s) = \frac{2}{\frac{1}{\frac{t_f}{t_f + t_p} - \frac{a_f}{a_f + a_p}} + \frac{1}{\frac{log(t_f)}{log(F)}}}\label{eq:sd}
 \end{equation}
+这个怀疑度公式计算的是两种因素的调和平均，它衡量的是两点：
+一是谓词为真是否提升了测试用例为失败的概率，
+二是谓词是否在大多数失败的测试用例中都为真。
 
 当把统计性调试应用到Defects4j数据集中Math的第二个缺陷时，会在出错的代码处增加谓词，因为出错的代码处刚好是一个返回。
 虽然在Java程序中，函数返回值不会像C程序那样经常用于表达成功或失败，但是这些返回值有时也表达出程序执行的一些信息。
 在Math的第二个缺陷中，会发现该错误语句处的六个谓词会有表\ref{math_2_return}中的覆盖情况。
 另外还有$a_f = 1$，$a_p = 6$。
-然而谓词1、2、5这些真分支被失败的测试用例覆盖的谓词的怀疑度都为0，谓词3、4、6的怀疑度都为负数。
-因为谓词1，2，5的$t_f = 1$，导致$log(t_f) = 0$，然后$\frac{log(F)}{log(t_f)} = INF$，
-于是最终计算得到的怀疑度为0。
-而谓词3、4、6由于$t_f = 0$，导致$log(t_f) = -INF$，致使分母中第二项为0。
-虽然谓词1、2、5的分数比3、4、6的分数高，但是0分并没有让这个出错的语句在整个代码的执行语句中排到前面。
-事实上对于所有真分支被失败测试用例覆盖的语句，由于其$t_f = 1$，最终其怀疑度都为0。
-由于每个谓词都存在和它取值相反的另一个谓词（比如\mycode{x > y}和\mycode{x $\le$ y}），所以$t_f = 1$总是存在的。
+然而所有谓词的分数都是零。
+这是因为$F = 1$所以$log(t_f)/log(F)$会发生除零的错误。
+根据统计性调试的论文的说明，除零错误则分数为零，所以所有谓词的分数都是零，因为对任一谓词都有$F = 1$。
+
+% 然而谓词1、2、5这些真分支被失败的测试用例覆盖的谓词的怀疑度都为0，谓词3、4、6的怀疑度都为负数。
+% 因为谓词1，2，5的$t_f = 1$，导致$log(t_f) = 0$，然后$\frac{log(F)}{log(t_f)} = INF$，
+% 于是最终计算得到的怀疑度为0。
+% 而谓词3、4、6由于$t_f = 0$，导致$log(t_f) = -INF$，致使分母中第二项为0。
+% 虽然谓词1、2、5的分数比3、4、6的分数高，但是0分并没有让这个出错的语句在整个代码的执行语句中排到前面。
+% 事实上对于所有真分支被失败测试用例覆盖的语句，由于其$t_f = 1$，最终其怀疑度都为0。
+% 由于每个谓词都存在和它取值相反的另一个谓词（比如\mycode{x > y}和\mycode{x $\le$ y}），所以$t_f = 1$总是存在的。
 
 在这个例子中，统计性调试得到了具有划分缺陷状态和非缺陷状态的谓词。
-但是由于统计性调试需要多个失败的测试用例覆盖出错的语句，而在Defects4j这个数据集中多数缺陷都只有一个失败测试用例覆盖到，
+但是由于统计性调试需要多个失败的测试用例，而在Defects4j这个数据集中多数缺陷都只有一个失败测试用例，
 导致统计性调试的效果在Defects4j数据集上效果不好。
 在Liblit\parencite{Liblit2005Scalable}的实验中，对每一个研究对象生成32000个随机输入。
-于是一个错误语句往往能被多个失败的测试用例覆盖。
+于是往往有多个失败的测试用例。
 可见统计性调试的方法在实际数据集里往往只有一个失败的测试用例的情况下并不适用。
 
 \begin{table}
 \centering
+\caption{返回值谓词的覆盖情况，其中 \\ \mycode{retValue = (double) (getSampleSize() * getNumberOfSuccesses()) / (double) getPopulationSize()}}
 \begin{tabular}{|c|l|p{5cm}<{\centering}|p{5cm}<{\centering}|}
 \hline
  & 谓词 & 谓词为真的失败的测试用例个数$t_f$ & 谓词为真的通过的测试用例个数$t_p$ \\
@@ -243,7 +251,6 @@ $P$ & 通过的测试用例执行的次数 \\
 6 & \mycode{retValue == 0} & 0 & 1 \\
 \hline
 \end{tabular}
-\caption{返回值谓词的覆盖情况，其中 \\ \mycode{retValue = (double) (getSampleSize() * getNumberOfSuccesses()) / (double) getPopulationSize()}}
 \label{math_2_return}
 \end{table}
 
@@ -296,6 +303,7 @@ $$
 
 \begin{table}[tbp]
 \centering
+\caption{SOBER方法下，Defects4j的Math第二个缺陷的错误语句里，分数最高的谓词的覆盖情况}
 \begin{tabular}{|c|c|c|c|}
 \hline
 测试用例编号 & 覆盖真分支的次数 & 覆盖假分支的次数 & 当前测试用例状态 \\
@@ -315,7 +323,6 @@ $$
 7 & 0 & 1000 & 通过 \\
 \hline
 \end{tabular}
-\caption{SOBER方法下，Defects4j的Math第二个缺陷的错误语句里，分数最高的谓词的覆盖情况}
 \label{math_2_sober}
 \end{table}
 

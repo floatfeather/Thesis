@@ -45,10 +45,11 @@
 可见谓词1以1.0000的分数远远高于其他谓词，成为怀疑度很大的谓词。
 对于每个语句的多个谓词，采用怀疑度最高的谓词的分数作为这个语句的怀疑度。
 使用Ochiai怀疑度公式，计算Math的第二个缺陷的各个谓词怀疑度，
-缺陷语句排名第3（第1到4名并列），相比于基于频谱的状态覆盖第11位、统计性调试全部为0和SOBER第10的结果，有显著提升。
+缺陷语句排名第3（第1到4名并列），相比于基于频谱的状态覆盖第10位、统计性调试全部为0和SOBER第10的结果，有显著提升。
 
 \begin{table}
 \centering
+\caption{使用Ochiai计算谓词怀疑度，其中 \\ \mycode{retValue = (double) (getSampleSize() * getNumberOfSuccesses()) / (double) getPopulationSize()}}
 \begin{tabular}{|c|l|c|}
 \hline
  & 谓词 & Ochiai分数\\
@@ -66,7 +67,6 @@
 6 & \mycode{retValue == 0} & 0.0000 \\
 \hline
 \end{tabular}
-\caption{使用Ochiai计算谓词怀疑度，其中 \\ \mycode{retValue = (double) (getSampleSize() * getNumberOfSuccesses()) / (double) getPopulationSize()}}
 \label{math_2_ochiai}
 \end{table}
 
@@ -218,6 +218,7 @@ EXPR模型的标签是这个变量相关的谓词是什么。
 
 \begin{table}
 \centering
+\caption{VAR模型和EXPR模型特征}
 \begin{tabular}{|l|l|}
 \hline
 特征名称 & 特征说明 \\
@@ -247,7 +248,6 @@ BodyUse & 变量在条件语句的语句体里的使用情况 \\
 OutUse & 变量在条件外的使用方式 \\
 \hline
 \end{tabular}
-\caption{VAR模型和EXPR模型特征}
 \label{var_feature}
 \end{table}
 
